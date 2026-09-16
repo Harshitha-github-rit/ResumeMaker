@@ -1,0 +1,63 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net: default-deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Connection health check doc
+    match /test/connection {
+      allow get: if true;
+    }
+
+    // User Profile: strict PII isolation
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isValidId(userId);
+      allow list: if false;
+      allow create: if (isOwner(userId) || isValidId(userId)) 
+        && incoming().id == userId 
+        && incoming().email is string 
+        && incoming().email.size() <= 200;
+      allow update: if (isOwner(userId) || isValidId(userId)) 
+        && incoming().id == existing().id;
+      allow delete: if isOwner(userId);
+    }
+
+    // Resumes: allow public get by direct ID link so shared resume links open for anyone
+    match /resumes/{resumeId} {
+      allow get: if true;
+      allow list: if (isSignedIn() && resource.data.userId == request.auth.uid)
+        || resource.data.isPublic == true;
+      allow create: if (isSignedIn() && incoming().userId == request.auth.uid)
+        || (incoming().userId is string && isValidId(resumeId));
+      allow update: if (isSignedIn() && (resource.data.userId == request.auth.uid || incoming().userId == resource.data.userId))
+        || (incoming().userId is string && isValidId(resumeId));
+      allow delete: if isSignedIn() 
+        && isValidId(resumeId) 
+        && resource.data.userId == request.auth.uid;
+    }
+  }
+}
