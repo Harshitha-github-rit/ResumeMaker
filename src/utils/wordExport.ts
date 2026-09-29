@@ -18,22 +18,48 @@ import { ResumeData, TemplateId } from '../types';
  * Maps app font selection to standard Microsoft Word fonts
  */
 const getDocxFont = (fontFamily?: string, templateId?: TemplateId): string => {
+  // Respect user-selected font family first
+  if (fontFamily) {
+    switch (fontFamily) {
+      case 'font-caveat':
+        return 'Segoe Print';
+      case 'font-dancing':
+        return 'Lucida Handwriting';
+      case 'font-jakarta':
+      case 'font-sans':
+        return 'Plus Jakarta Sans';
+      case 'font-inter':
+        return 'Inter';
+      case 'font-poppins':
+        return 'Poppins';
+      case 'font-outfit':
+        return 'Outfit';
+      case 'font-montserrat':
+        return 'Montserrat';
+      case 'font-dmsans':
+        return 'DM Sans';
+      case 'font-playfair':
+      case 'font-serif':
+        return 'Playfair Display';
+      case 'font-merriweather':
+        return 'Merriweather';
+      case 'font-lora':
+        return 'Lora';
+      case 'font-cormorant':
+        return 'Cormorant Garamond';
+      case 'font-mono':
+        return 'Roboto Mono';
+      default:
+        break;
+    }
+  }
+
+  // Template fallback defaults
   if (templateId === 'classic') return 'Georgia';
   if (templateId === 'minimal') return 'Arial';
   if (templateId === 'executive') return 'Calibri';
   if (templateId === 'creative') return 'Century Gothic';
-
-  switch (fontFamily) {
-    case 'serif':
-      return 'Georgia';
-    case 'mono':
-      return 'Consolas';
-    case 'poppins':
-    case 'inter':
-    case 'sans':
-    default:
-      return 'Calibri';
-  }
+  return 'Calibri';
 };
 
 /**

@@ -1,8 +1,24 @@
 export type TemplateId = 'modern' | 'classic' | 'minimal' | 'executive' | 'creative' | 'professional';
 
-export type FontOption = 'font-sans' | 'font-serif' | 'font-mono' | 'font-inter' | 'font-outfit' | 'font-merriweather' | 'font-playfair';
+export type FontOption =
+  | 'font-sans'
+  | 'font-jakarta'
+  | 'font-inter'
+  | 'font-poppins'
+  | 'font-outfit'
+  | 'font-montserrat'
+  | 'font-dmsans'
+  | 'font-serif'
+  | 'font-playfair'
+  | 'font-merriweather'
+  | 'font-lora'
+  | 'font-cormorant'
+  | 'font-caveat'
+  | 'font-dancing'
+  | 'font-mono'
+  | string;
 
-export type FontSizeOption = 'compact' | 'normal' | 'large';
+export type FontSizeOption = 'small' | 'compact' | 'normal' | 'medium' | 'large' | 'xlarge' | string;
 
 export type SpacingOption = 'tight' | 'normal' | 'relaxed';
 

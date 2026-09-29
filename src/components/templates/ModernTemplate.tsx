@@ -1,7 +1,7 @@
 import React from 'react';
 import { ResumeData } from '../../types';
 import { Mail, Phone, MapPin, Linkedin, Globe, Calendar, ExternalLink } from 'lucide-react';
-import { getFontFamilyClass, getFontSizeClass, getSpacingClass, getMarginPadding, formatDates } from './templateStyles';
+import { getFontFamilyClass, getFontFamilyCss, getFontSizeClass, getSpacingClass, getMarginPadding, formatDates } from './templateStyles';
 
 interface Props {
   data: ResumeData;
@@ -13,6 +13,7 @@ export const ModernTemplate: React.FC<Props> = ({ data }) => {
   const { personalInfo, summary, experience, education, skills, projects, certifications, languages, achievements, hobbies, customization } = data;
   const accent = customization.accentColor || '#2563eb';
   const fontClass = getFontFamilyClass(customization.fontFamily);
+  const fontCss = getFontFamilyCss(customization.fontFamily);
   const size = getFontSizeClass(customization.fontSize);
   const spacing = getSpacingClass(customization.spacing);
   const padding = getMarginPadding(customization.margins);
@@ -26,7 +27,13 @@ export const ModernTemplate: React.FC<Props> = ({ data }) => {
   );
 
   return (
-    <div className={`w-full bg-white text-slate-800 ${fontClass} ${size.root} ${padding} shadow-sm box-border`}>
+    <div
+      className={`w-full bg-white text-slate-800 ${fontClass} ${size.root} ${padding} shadow-sm box-border`}
+      style={{
+        fontFamily: fontCss,
+        ...size.cssStyle
+      }}
+    >
       {/* Header Section */}
       <div className="border-b pb-4 mb-4" style={{ borderColor: `${accent}30` }}>
         <div className="flex flex-row items-center justify-between gap-4">
@@ -48,7 +55,7 @@ export const ModernTemplate: React.FC<Props> = ({ data }) => {
             </div>
           </div>
 
-            <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-slate-600 text-xs text-right justify-end max-w-xs">
+            <div className={`flex flex-wrap gap-x-4 gap-y-1.5 text-slate-600 ${size.meta} text-right justify-end max-w-xs`}>
               {personalInfo.email && (
                 <div className="flex items-center gap-1.5">
                   <Mail className="w-3.5 h-3.5" style={{ color: accent }} />
@@ -96,7 +103,7 @@ export const ModernTemplate: React.FC<Props> = ({ data }) => {
               >
                 PROFESSIONAL SUMMARY
               </h2>
-              <p className="text-slate-700 leading-relaxed text-justify">{summary}</p>
+              <p className={`text-slate-700 ${size.body} leading-relaxed text-justify`}>{summary}</p>
             </div>
           )}
 
@@ -113,16 +120,16 @@ export const ModernTemplate: React.FC<Props> = ({ data }) => {
                 {experience.map(exp => (
                   <div key={exp.id} className="relative">
                     <div className="flex justify-between items-baseline">
-                      <h3 className="font-bold text-slate-900">{exp.jobTitle}</h3>
-                      <span className="text-xs text-slate-500 font-medium">
+                      <h3 className={`font-bold text-slate-900 ${size.itemTitle}`}>{exp.jobTitle}</h3>
+                      <span className={`${size.meta} text-slate-500 font-medium`}>
                         {formatDates(exp.startDate, exp.endDate, exp.isCurrent)}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center text-xs text-slate-600 mb-1.5">
+                    <div className={`flex justify-between items-center ${size.meta} text-slate-600 mb-1.5`}>
                       <span className="font-semibold" style={{ color: accent }}>{exp.company}</span>
                       {exp.location && <span>{exp.location}</span>}
                     </div>
-                    <div className="text-slate-700 whitespace-pre-line leading-relaxed text-xs">
+                    <div className={`text-slate-700 whitespace-pre-line leading-relaxed ${size.body}`}>
                       {exp.description}
                     </div>
                   </div>
@@ -144,24 +151,24 @@ export const ModernTemplate: React.FC<Props> = ({ data }) => {
                 {projects.map(proj => (
                   <div key={proj.id}>
                     <div className="flex justify-between items-baseline">
-                      <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                      <span className={`font-bold text-slate-900 flex items-center gap-1.5 ${size.itemTitle}`}>
                         {proj.name}
                         {proj.link && <ExternalLink className="w-3 h-3 text-slate-400" />}
                       </span>
-                      <div className="text-xs text-slate-500 space-x-1 font-mono">
+                      <div className={`${size.meta} text-slate-500 space-x-1 font-mono`}>
                         {proj.role && <span>{proj.role}</span>}
                         {proj.startDate && <span>• {formatDates(proj.startDate, proj.endDate)}</span>}
                       </div>
                     </div>
                     {proj.link && (
-                      <span className="text-[11px] text-blue-600 font-mono block">{proj.link}</span>
+                      <span className={`${size.meta} text-blue-600 font-mono block`}>{proj.link}</span>
                     )}
                     {proj.technologies && (
-                      <p className="text-[11px] font-mono text-slate-500 mb-0.5">
+                      <p className={`${size.meta} font-mono text-slate-500 mb-0.5`}>
                         Tech: {proj.technologies}
                       </p>
                     )}
-                    <p className="text-slate-700 text-xs leading-relaxed">{proj.description}</p>
+                    <p className={`text-slate-700 ${size.body} leading-relaxed`}>{proj.description}</p>
                   </div>
                 ))}
               </div>
@@ -177,7 +184,7 @@ export const ModernTemplate: React.FC<Props> = ({ data }) => {
               >
                 KEY ACHIEVEMENTS
               </h2>
-              <ul className="space-y-1.5 text-xs text-slate-700">
+              <ul className={`space-y-1.5 ${size.body} text-slate-700`}>
                 {achievements.map(ach => (
                   <li key={ach.id} className="flex items-start gap-2">
                     <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: accent }} />
@@ -193,7 +200,7 @@ export const ModernTemplate: React.FC<Props> = ({ data }) => {
           )}
         </div>
 
-        {/* Sidebar Column (4 cols) - Seamless integrated column, no floating card or image box effect */}
+        {/* Sidebar Column (4 cols) - Seamless integrated column */}
         {hasSidebarContent && (
           <div className={`col-span-4 ${spacing.sectionGap} pl-5 border-l border-slate-200/80`}>
             {/* Skills */}
@@ -209,11 +216,11 @@ export const ModernTemplate: React.FC<Props> = ({ data }) => {
                   {skills.map(skill => (
                     <span
                       key={skill.id}
-                      className="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100/90 text-slate-800 border border-slate-200/80"
+                      className={`inline-block px-2 py-0.5 rounded ${size.meta} font-medium bg-slate-100/90 text-slate-800 border border-slate-200/80`}
                     >
                       {skill.name}
                       {skill.level && (
-                        <span className="ml-1 text-[9.5px] opacity-70">
+                        <span className="ml-1 opacity-70">
                           • {skill.level}
                         </span>
                       )}
@@ -234,17 +241,17 @@ export const ModernTemplate: React.FC<Props> = ({ data }) => {
                 </h2>
                 <div className="space-y-2.5">
                   {education.map(edu => (
-                    <div key={edu.id} className="text-xs">
-                      <h3 className="font-bold text-slate-900">{edu.degree}</h3>
+                    <div key={edu.id} className={size.body}>
+                      <h3 className={`font-bold text-slate-900 ${size.itemTitle}`}>{edu.degree}</h3>
                       <p className="font-medium text-slate-700">{edu.institution}</p>
-                      <p className="text-slate-500 text-[11px]">
+                      <p className={`text-slate-500 ${size.meta}`}>
                         {formatDates(edu.startDate, edu.endDate)} {edu.location && `| ${edu.location}`}
                       </p>
                       {edu.gpaOrHonors && (
-                        <p className="text-[11px] text-slate-600 font-medium mt-0.5">{edu.gpaOrHonors}</p>
+                        <p className={`text-slate-600 font-medium mt-0.5 ${size.meta}`}>{edu.gpaOrHonors}</p>
                       )}
                       {edu.description && (
-                        <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{edu.description}</p>
+                        <p className={`text-slate-500 mt-0.5 leading-relaxed ${size.meta}`}>{edu.description}</p>
                       )}
                     </div>
                   ))}
@@ -261,11 +268,11 @@ export const ModernTemplate: React.FC<Props> = ({ data }) => {
                 >
                   CERTIFICATIONS
                 </h2>
-                <div className="space-y-2 text-xs">
+                <div className="space-y-2">
                   {certifications.map(cert => (
-                    <div key={cert.id}>
+                    <div key={cert.id} className={size.body}>
                       <p className="font-semibold text-slate-900">{cert.name}</p>
-                      <p className="text-[11px] text-slate-600">
+                      <p className={`text-slate-600 ${size.meta}`}>
                         {cert.issuer} {cert.issueDate && `(${cert.issueDate})`}
                       </p>
                     </div>
@@ -283,11 +290,11 @@ export const ModernTemplate: React.FC<Props> = ({ data }) => {
                 >
                   LANGUAGES
                 </h2>
-                <div className="space-y-1 text-xs">
+                <div className={`space-y-1 ${size.body}`}>
                   {languages.map(lang => (
                     <div key={lang.id} className="flex justify-between text-slate-700">
                       <span className="font-medium text-slate-900">{lang.name}</span>
-                      <span className="text-slate-500 text-[11px]">{lang.proficiency}</span>
+                      <span className={`text-slate-500 ${size.meta}`}>{lang.proficiency}</span>
                     </div>
                   ))}
                 </div>
@@ -303,7 +310,7 @@ export const ModernTemplate: React.FC<Props> = ({ data }) => {
                 >
                   INTERESTS
                 </h2>
-                <p className="text-xs text-slate-600 leading-normal">
+                <p className={`${size.body} text-slate-600 leading-normal`}>
                   {hobbies.join(' • ')}
                 </p>
               </div>

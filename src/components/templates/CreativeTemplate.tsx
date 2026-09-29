@@ -1,7 +1,7 @@
 import React from 'react';
 import { ResumeData } from '../../types';
 import { Mail, Phone, MapPin, Linkedin, Globe, Sparkles } from 'lucide-react';
-import { getFontFamilyClass, getFontSizeClass, getSpacingClass, getMarginPadding, formatDates } from './templateStyles';
+import { getFontFamilyClass, getFontFamilyCss, getFontSizeClass, getSpacingClass, getMarginPadding, formatDates } from './templateStyles';
 
 interface Props {
   data: ResumeData;
@@ -13,12 +13,19 @@ export const CreativeTemplate: React.FC<Props> = ({ data }) => {
   const { personalInfo, summary, experience, education, skills, projects, certifications, languages, achievements, hobbies, customization } = data;
   const accent = customization.accentColor || '#7c3aed';
   const fontClass = getFontFamilyClass(customization.fontFamily);
+  const fontCss = getFontFamilyCss(customization.fontFamily);
   const size = getFontSizeClass(customization.fontSize);
   const spacing = getSpacingClass(customization.spacing);
   const padding = getMarginPadding(customization.margins);
 
   return (
-    <div className={`w-full bg-white text-slate-800 ${fontClass} ${size.root} shadow-sm box-border flex`}>
+    <div
+      className={`w-full bg-white text-slate-800 ${fontClass} ${size.root} shadow-sm box-border flex`}
+      style={{
+        fontFamily: fontCss,
+        ...size.cssStyle
+      }}
+    >
       {/* Creative Left Side Column */}
       <div
         className="w-[34%] text-white p-5 flex flex-col justify-between shrink-0"
@@ -41,12 +48,12 @@ export const CreativeTemplate: React.FC<Props> = ({ data }) => {
                 {personalInfo.fullName.charAt(0)}
               </div>
             )}
-            <h1 className="text-xl font-bold tracking-tight text-white">{personalInfo.fullName}</h1>
-            <p className="text-xs text-purple-200 mt-0.5 font-medium">{personalInfo.professionalTitle}</p>
+            <h1 className={`${size.name} font-bold tracking-tight text-white`}>{personalInfo.fullName}</h1>
+            <p className={`${size.title} text-purple-200 mt-0.5 font-medium`}>{personalInfo.professionalTitle}</p>
           </div>
 
           {/* Contact Details */}
-          <div className="space-y-2 text-xs text-purple-100 border-t border-white/20 pt-4">
+          <div className={`space-y-2 ${size.meta} text-purple-100 border-t border-white/20 pt-4`}>
             {personalInfo.email && (
               <div className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 shrink-0 opacity-80" />
@@ -82,13 +89,13 @@ export const CreativeTemplate: React.FC<Props> = ({ data }) => {
           {/* Skills with Meter Badges */}
           {skills && skills.length > 0 && (
             <div className="border-t border-white/20 pt-4">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-purple-200 mb-2.5">
+              <h2 className={`${size.sectionTitle} font-bold uppercase tracking-wider text-purple-200 mb-2.5`}>
                 Skills & Talents
               </h2>
               <div className="space-y-2">
                 {skills.map(skill => (
                   <div key={skill.id}>
-                    <div className="flex justify-between text-[11px] mb-0.5">
+                    <div className={`flex justify-between ${size.meta} mb-0.5`}>
                       <span>{skill.name}</span>
                       <span className="opacity-70 text-[9.5px]">{skill.level}</span>
                     </div>
@@ -116,14 +123,14 @@ export const CreativeTemplate: React.FC<Props> = ({ data }) => {
           {/* Languages */}
           {languages && languages.length > 0 && (
             <div className="border-t border-white/20 pt-4">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-purple-200 mb-2">
+              <h2 className={`${size.sectionTitle} font-bold uppercase tracking-wider text-purple-200 mb-2`}>
                 Languages
               </h2>
-              <div className="space-y-1 text-xs">
+              <div className={`space-y-1 ${size.meta}`}>
                 {languages.map(l => (
                   <div key={l.id} className="flex justify-between">
                     <span>{l.name}</span>
-                    <span className="text-purple-200 text-[11px]">{l.proficiency}</span>
+                    <span className="text-purple-200">{l.proficiency}</span>
                   </div>
                 ))}
               </div>
@@ -133,7 +140,7 @@ export const CreativeTemplate: React.FC<Props> = ({ data }) => {
 
         {/* Bottom Tag */}
         {hobbies && hobbies.length > 0 && (
-          <div className="border-t border-white/20 pt-3 text-[11px] text-purple-200">
+          <div className={`border-t border-white/20 pt-3 ${size.meta} text-purple-200`}>
             <span className="block font-semibold mb-1">Passions</span>
             {hobbies.slice(0, 3).join(', ')}
           </div>
@@ -149,7 +156,7 @@ export const CreativeTemplate: React.FC<Props> = ({ data }) => {
               <Sparkles className="w-4 h-4" style={{ color: accent }} />
               Creative Profile
             </h2>
-            <p className="text-xs text-slate-700 leading-relaxed text-justify">{summary}</p>
+            <p className={`${size.body} text-slate-700 leading-relaxed text-justify`}>{summary}</p>
           </div>
         )}
 
@@ -167,13 +174,13 @@ export const CreativeTemplate: React.FC<Props> = ({ data }) => {
                     style={{ borderColor: accent }}
                   />
                   <div className="flex justify-between items-baseline">
-                    <h3 className="font-bold text-slate-900 text-xs">{exp.jobTitle}</h3>
-                    <span className="text-[11px] text-slate-500 font-medium">
+                    <h3 className={`font-bold text-slate-900 ${size.itemTitle}`}>{exp.jobTitle}</h3>
+                    <span className={`${size.meta} text-slate-500 font-medium`}>
                       {formatDates(exp.startDate, exp.endDate, exp.isCurrent)}
                     </span>
                   </div>
-                  <p className="text-xs font-semibold mb-1" style={{ color: accent }}>{exp.company}</p>
-                  <div className="text-xs text-slate-600 whitespace-pre-line leading-relaxed">
+                  <p className={`${size.meta} font-semibold mb-1`} style={{ color: accent }}>{exp.company}</p>
+                  <div className={`${size.body} text-slate-600 whitespace-pre-line leading-relaxed`}>
                     {exp.description}
                   </div>
                 </div>
@@ -188,21 +195,21 @@ export const CreativeTemplate: React.FC<Props> = ({ data }) => {
             <h2 className={`${size.sectionTitle} font-bold uppercase tracking-wider mb-2 text-slate-900 pb-1 border-b`}>
               Selected Work & Projects
             </h2>
-            <div className="space-y-2.5 text-xs">
+            <div className={`space-y-2.5 ${size.body}`}>
               {projects.map(proj => (
                 <div key={proj.id} className="p-2.5 rounded bg-slate-50 border border-slate-100">
                   <div className="flex justify-between items-baseline font-bold text-slate-900">
-                    <span>{proj.name}</span>
-                    <div className="text-[11px] text-slate-500 font-normal space-x-1">
+                    <span className={size.itemTitle}>{proj.name}</span>
+                    <div className={`${size.meta} text-slate-500 font-normal space-x-1`}>
                       {proj.role && <span>{proj.role}</span>}
                       {proj.startDate && <span>• {formatDates(proj.startDate, proj.endDate)}</span>}
                     </div>
                   </div>
                   {proj.link && (
-                    <span className="text-[11px] text-purple-700 font-mono block">{proj.link}</span>
+                    <span className={`${size.meta} text-purple-700 font-mono block`}>{proj.link}</span>
                   )}
                   {proj.technologies && (
-                    <span className="text-[10.5px] font-mono text-purple-600 block mb-0.5">{proj.technologies}</span>
+                    <span className={`${size.meta} font-mono text-purple-600 block mb-0.5`}>{proj.technologies}</span>
                   )}
                   <p className="text-slate-600 mt-0.5 leading-relaxed">{proj.description}</p>
                 </div>
@@ -217,23 +224,23 @@ export const CreativeTemplate: React.FC<Props> = ({ data }) => {
             <h2 className={`${size.sectionTitle} font-bold uppercase tracking-wider mb-2 text-slate-900 pb-1 border-b`}>
               Education
             </h2>
-            <div className="space-y-2.5 text-xs">
+            <div className={`space-y-2.5 ${size.body}`}>
               {education.map(edu => (
                 <div key={edu.id}>
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-bold text-slate-900">{edu.degree}</h3>
+                      <h3 className={`font-bold text-slate-900 ${size.itemTitle}`}>{edu.degree}</h3>
                       <p className="text-slate-600">{edu.institution} {edu.location && `• ${edu.location}`}</p>
                     </div>
-                    <span className="text-[11px] text-slate-400 font-mono shrink-0">
+                    <span className={`${size.meta} text-slate-400 font-mono shrink-0`}>
                       {formatDates(edu.startDate, edu.endDate)}
                     </span>
                   </div>
                   {edu.gpaOrHonors && (
-                    <p className="text-[11px] font-medium text-purple-800 mt-0.5">{edu.gpaOrHonors}</p>
+                    <p className={`${size.meta} font-medium text-purple-800 mt-0.5`}>{edu.gpaOrHonors}</p>
                   )}
                   {edu.description && (
-                    <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">{edu.description}</p>
+                    <p className={`${size.meta} text-slate-600 mt-0.5 leading-relaxed`}>{edu.description}</p>
                   )}
                 </div>
               ))}
@@ -247,14 +254,14 @@ export const CreativeTemplate: React.FC<Props> = ({ data }) => {
             <h2 className={`${size.sectionTitle} font-bold uppercase tracking-wider mb-2 text-slate-900 pb-1 border-b`}>
               Honors & Achievements
             </h2>
-            <div className="space-y-2 text-xs">
+            <div className={`space-y-2 ${size.body}`}>
               {achievements.map(ach => (
                 <div key={ach.id} className="p-2 rounded bg-purple-50/60 border border-purple-100">
                   <div className="flex justify-between items-baseline">
-                    <strong className="text-slate-900">{ach.title}</strong>
-                    {ach.year && <span className="text-[11px] text-purple-700 font-medium">{ach.year}</span>}
+                    <strong className={`text-slate-900 ${size.itemTitle}`}>{ach.title}</strong>
+                    {ach.year && <span className={`${size.meta} text-purple-700 font-medium`}>{ach.year}</span>}
                   </div>
-                  {ach.organization && <span className="text-[11px] text-slate-500 block">{ach.organization}</span>}
+                  {ach.organization && <span className={`${size.meta} text-slate-500 block`}>{ach.organization}</span>}
                   {ach.description && <p className="text-slate-600 mt-0.5">{ach.description}</p>}
                 </div>
               ))}
@@ -268,11 +275,11 @@ export const CreativeTemplate: React.FC<Props> = ({ data }) => {
             <h2 className={`${size.sectionTitle} font-bold uppercase tracking-wider mb-2 text-slate-900 pb-1 border-b`}>
               Certifications & Badges
             </h2>
-            <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className={`grid grid-cols-2 gap-2 ${size.body}`}>
               {certifications.map(c => (
                 <div key={c.id} className="p-2 rounded bg-slate-50 border border-slate-100">
-                  <p className="font-semibold text-slate-900">{c.name}</p>
-                  <p className="text-[11px] text-slate-500">
+                  <p className={`font-semibold text-slate-900 ${size.itemTitle}`}>{c.name}</p>
+                  <p className={`${size.meta} text-slate-500`}>
                     {c.issuer} {c.issueDate && `• ${c.issueDate}`}
                   </p>
                 </div>
