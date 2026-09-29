@@ -270,22 +270,32 @@ export const BuilderForm: React.FC = () => {
       <div className="bg-blue-50/70 border border-blue-200/70 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
-          <span className="text-xs font-bold text-blue-900">Need instant inspiration?</span>
+          <span className="text-xs font-bold text-blue-900">Load Profile Template:</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => loadSampleProfile('fresher')}
+            className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shadow-2xs transition-colors flex items-center gap-1"
+            title="Load entry-level fresher resume with GPA, projects, honors, and coursework"
+          >
+            🎓 Fresher / Graduate
+          </button>
           <button
             type="button"
             onClick={() => loadSampleProfile('engineer')}
             className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 transition-colors"
+            title="Load experienced Senior Software Engineer profile"
           >
-            Software Engineer
+            💼 Experienced Engineer
           </button>
           <button
             type="button"
             onClick={() => loadSampleProfile('pm')}
             className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 transition-colors"
+            title="Load experienced Product Manager profile"
           >
-            Product Manager
+            📊 Product Manager
           </button>
           {showClearConfirm ? (
             <div className="flex items-center gap-1.5 animate-in fade-in duration-150">

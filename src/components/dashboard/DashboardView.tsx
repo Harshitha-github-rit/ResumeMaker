@@ -46,6 +46,7 @@ export const DashboardView: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newResumeTitle, setNewResumeTitle] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>('modern');
+  const [newResumeProfileType, setNewResumeProfileType] = useState<'experienced' | 'fresher'>('experienced');
   const [downloadTargetResume, setDownloadTargetResume] = useState<ResumeData | null>(null);
   const [shareTargetResume, setShareTargetResume] = useState<ResumeData | null>(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -73,8 +74,9 @@ export const DashboardView: React.FC = () => {
   };
 
   const handleCreateNew = () => {
-    const title = newResumeTitle.trim() || 'My Professional Resume';
-    createNewResume(selectedTemplate, title);
+    const defaultTitle = newResumeProfileType === 'fresher' ? 'Fresher Resume' : 'My Professional Resume';
+    const title = newResumeTitle.trim() || defaultTitle;
+    createNewResume(selectedTemplate, title, newResumeProfileType);
     setIsCreateModalOpen(false);
     setNewResumeTitle('');
   };
@@ -121,8 +123,8 @@ export const DashboardView: React.FC = () => {
             <div className="overflow-hidden">
               <p className="text-xs font-bold text-slate-900 truncate">{user?.name || 'Alex Rivera'}</p>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800">
-                  {user?.plan || 'Pro'} Member
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                  100% Free Account
                 </span>
               </div>
             </div>
@@ -261,10 +263,10 @@ export const DashboardView: React.FC = () => {
                 </div>
               </div>
               <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
-                <p className="text-xs font-medium text-slate-500">Active Plan</p>
+                <p className="text-xs font-medium text-slate-500">Account Access</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-2xl font-black text-blue-600">{user?.plan || 'Pro'}</span>
-                  <span className="text-[10px] text-slate-400">Unlimited PDF Exports</span>
+                  <span className="text-2xl font-black text-emerald-600">Free</span>
+                  <span className="text-[10px] text-slate-400">Unlimited Free Downloads</span>
                 </div>
               </div>
             </div>
@@ -448,13 +450,13 @@ export const DashboardView: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Current Membership Plan</label>
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex justify-between items-center">
+                <label className="block font-semibold text-slate-700 mb-1">Account & Usage</label>
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex justify-between items-center">
                   <div>
-                    <span className="font-bold text-blue-900">{user?.plan || 'Pro'} Plan</span>
-                    <p className="text-[11px] text-blue-700">Unlimited resumes & priority downloads</p>
+                    <span className="font-bold text-emerald-900">100% Free Forever</span>
+                    <p className="text-[11px] text-emerald-700">All templates and PDF/Word downloads are completely free. No subscription, membership, or payment required.</p>
                   </div>
-                  <span className="text-[10px] font-bold px-2 py-1 rounded bg-blue-600 text-white">Active</span>
+                  <span className="text-[10px] font-bold px-2 py-1 rounded bg-emerald-600 text-white">Free Forever</span>
                 </div>
               </div>
             </div>
@@ -477,11 +479,53 @@ export const DashboardView: React.FC = () => {
             </div>
 
             <div className="space-y-4">
+              {/* Profile / Career Stage Selection */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Your Experience Level</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewResumeProfileType('fresher')}
+                    className={`p-3 rounded-xl border text-left transition-all ${
+                      newResumeProfileType === 'fresher'
+                        ? 'border-emerald-600 bg-emerald-50/60 ring-1 ring-emerald-600'
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between font-bold text-slate-900 text-xs">
+                      <span>🎓 Fresher / Student</span>
+                      {newResumeProfileType === 'fresher' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Highlight Education, GPA, Projects & Coursework
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setNewResumeProfileType('experienced')}
+                    className={`p-3 rounded-xl border text-left transition-all ${
+                      newResumeProfileType === 'experienced'
+                        ? 'border-blue-600 bg-blue-50/60 ring-1 ring-blue-600'
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between font-bold text-slate-900 text-xs">
+                      <span>💼 Experienced Pro</span>
+                      {newResumeProfileType === 'experienced' && <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />}
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Highlight Work History, Leadership & Achievements
+                    </p>
+                  </button>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Resume Name</label>
                 <input
                   type="text"
-                  placeholder="e.g. Senior Frontend Engineer - TechCorp"
+                  placeholder={newResumeProfileType === 'fresher' ? "e.g. Junior Software Engineer - Entry Level" : "e.g. Senior Frontend Engineer - TechCorp"}
                   value={newResumeTitle}
                   onChange={e => setNewResumeTitle(e.target.value)}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500"

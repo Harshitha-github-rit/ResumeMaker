@@ -5,6 +5,8 @@ import { getFontFamilyClass, getFontSizeClass, getSpacingClass, getMarginPadding
 
 interface Props {
   data: ResumeData;
+  page?: 1 | 2;
+  totalPages?: 1 | 2;
 }
 
 export const ClassicTemplate: React.FC<Props> = ({ data }) => {
@@ -16,50 +18,58 @@ export const ClassicTemplate: React.FC<Props> = ({ data }) => {
   const padding = getMarginPadding(customization.margins);
 
   return (
-    <div className={`w-full bg-white text-slate-800 ${fontClass} ${size.root} ${padding} shadow-sm min-h-[1050px]`}>
-      {/* Centered Classic Header */}
-      <div className="text-center pb-5 mb-5 border-b-2" style={{ borderColor: accent }}>
+    <div className={`w-full bg-white text-slate-800 ${fontClass} ${size.root} ${padding} shadow-sm box-border`}>
+      {/* Header */}
+      <div className="text-center pb-4 mb-4 border-b-2" style={{ borderColor: accent }}>
+        {customization.showPhoto && personalInfo.avatarUrl && (
+          <img
+            src={personalInfo.avatarUrl}
+            alt={personalInfo.fullName}
+            referrerPolicy="no-referrer"
+            className="w-20 h-20 rounded-full mx-auto object-cover border-2 border-slate-300 shadow-2xs mb-3"
+          />
+        )}
         <h1 className={`${size.name} text-slate-900 tracking-tight font-serif uppercase tracking-wider`}>
           {personalInfo.fullName}
         </h1>
-        <p className={`${size.title} font-medium tracking-wide mt-1 text-slate-700 italic`}>
-          {personalInfo.professionalTitle}
-        </p>
+          <p className={`${size.title} font-medium tracking-wide mt-1 text-slate-700 italic`}>
+            {personalInfo.professionalTitle}
+          </p>
 
-        {/* Contact Strip */}
-        <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 mt-3 text-xs text-slate-600">
-          {personalInfo.location && (
-            <span className="flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-slate-400" />
-              {personalInfo.location}
-            </span>
-          )}
-          {personalInfo.email && (
-            <span className="flex items-center gap-1">
-              <Mail className="w-3.5 h-3.5 text-slate-400" />
-              {personalInfo.email}
-            </span>
-          )}
-          {personalInfo.phone && (
-            <span className="flex items-center gap-1">
-              <Phone className="w-3.5 h-3.5 text-slate-400" />
-              {personalInfo.phone}
-            </span>
-          )}
-          {personalInfo.linkedin && (
-            <span className="flex items-center gap-1">
-              <Linkedin className="w-3.5 h-3.5 text-slate-400" />
-              {personalInfo.linkedin}
-            </span>
-          )}
-          {personalInfo.portfolio && (
-            <span className="flex items-center gap-1">
-              <Globe className="w-3.5 h-3.5 text-slate-400" />
-              {personalInfo.portfolio}
-            </span>
-          )}
+          {/* Contact Strip */}
+          <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 mt-3 text-xs text-slate-600">
+            {personalInfo.location && (
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                {personalInfo.location}
+              </span>
+            )}
+            {personalInfo.email && (
+              <span className="flex items-center gap-1">
+                <Mail className="w-3.5 h-3.5 text-slate-400" />
+                {personalInfo.email}
+              </span>
+            )}
+            {personalInfo.phone && (
+              <span className="flex items-center gap-1">
+                <Phone className="w-3.5 h-3.5 text-slate-400" />
+                {personalInfo.phone}
+              </span>
+            )}
+            {personalInfo.linkedin && (
+              <span className="flex items-center gap-1">
+                <Linkedin className="w-3.5 h-3.5 text-slate-400" />
+                {personalInfo.linkedin}
+              </span>
+            )}
+            {personalInfo.portfolio && (
+              <span className="flex items-center gap-1">
+                <Globe className="w-3.5 h-3.5 text-slate-400" />
+                {personalInfo.portfolio}
+              </span>
+            )}
+          </div>
         </div>
-      </div>
 
       <div className={spacing.sectionGap}>
         {/* Summary */}
@@ -115,17 +125,20 @@ export const ClassicTemplate: React.FC<Props> = ({ data }) => {
             >
               Education
             </h2>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {education.map(edu => (
-                <div key={edu.id} className="flex justify-between items-start text-xs">
-                  <div>
-                    <h3 className="font-bold text-slate-900">{edu.degree}</h3>
-                    <p className="text-slate-700">{edu.institution} {edu.location && `— ${edu.location}`}</p>
-                    {edu.gpaOrHonors && <p className="text-slate-600 italic mt-0.5">{edu.gpaOrHonors}</p>}
+                <div key={edu.id} className="text-xs">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-bold text-slate-900">{edu.degree}</h3>
+                      <p className="text-slate-700">{edu.institution} {edu.location && `— ${edu.location}`}</p>
+                    </div>
+                    <span className="text-slate-500 text-[11px] italic shrink-0">
+                      {formatDates(edu.startDate, edu.endDate)}
+                    </span>
                   </div>
-                  <span className="text-slate-500 text-[11px] italic shrink-0">
-                    {formatDates(edu.startDate, edu.endDate)}
-                  </span>
+                  {edu.gpaOrHonors && <p className="text-slate-600 italic mt-0.5">{edu.gpaOrHonors}</p>}
+                  {edu.description && <p className="text-slate-600 mt-0.5 leading-relaxed">{edu.description}</p>}
                 </div>
               ))}
             </div>
@@ -142,7 +155,7 @@ export const ClassicTemplate: React.FC<Props> = ({ data }) => {
               Areas of Expertise
             </h2>
             <p className="text-xs text-slate-700 leading-relaxed">
-              {skills.map(s => `${s.name} (${s.level})`).join(' • ')}
+              {skills.map(s => `${s.name}${s.level ? ` (${s.level})` : ''}`).join(' • ')}
             </p>
           </div>
         )}
@@ -156,21 +169,51 @@ export const ClassicTemplate: React.FC<Props> = ({ data }) => {
             >
               Notable Projects
             </h2>
-            <div className="space-y-2 text-xs">
+            <div className="space-y-3 text-xs">
               {projects.map(proj => (
                 <div key={proj.id}>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-baseline">
                     <strong className="text-slate-900">{proj.name}</strong>
-                    {proj.role && <span className="text-slate-500 italic">{proj.role}</span>}
+                    <div className="text-slate-500 italic space-x-1">
+                      {proj.role && <span>{proj.role}</span>}
+                      {proj.startDate && <span>({formatDates(proj.startDate, proj.endDate)})</span>}
+                    </div>
                   </div>
-                  <p className="text-slate-700 mt-0.5">{proj.description}</p>
+                  {proj.link && <span className="text-blue-700 block text-[11px] font-mono">{proj.link}</span>}
+                  {proj.technologies && <span className="text-slate-500 italic text-[11px] block">{proj.technologies}</span>}
+                  <p className="text-slate-700 mt-0.5 leading-relaxed">{proj.description}</p>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Certifications & Languages Grid */}
+        {/* Honors & Key Achievements */}
+        {achievements && achievements.length > 0 && (
+          <div>
+            <h2
+              className={`${size.sectionTitle} font-bold uppercase tracking-widest pb-1 mb-2 border-b text-slate-900`}
+              style={{ borderColor: `${accent}40` }}
+            >
+              Honors & Key Achievements
+            </h2>
+            <div className="space-y-1.5 text-xs">
+              {achievements.map(ach => (
+                <div key={ach.id} className="flex items-start gap-2">
+                  <span className="text-slate-400">•</span>
+                  <div>
+                    <strong className="text-slate-900">{ach.title}</strong>
+                    {ach.organization && <span className="text-slate-600"> — {ach.organization}</span>}
+                    {ach.year && <span className="text-slate-500 italic"> ({ach.year})</span>}
+                    {ach.description && <p className="text-slate-600 mt-0.5">{ach.description}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Certifications & Languages & Hobbies Grid */}
         <div className="grid grid-cols-2 gap-6 pt-1">
           {certifications && certifications.length > 0 && (
             <div>
@@ -183,7 +226,7 @@ export const ClassicTemplate: React.FC<Props> = ({ data }) => {
               <ul className="space-y-1 text-xs text-slate-700">
                 {certifications.map(c => (
                   <li key={c.id}>
-                    • <strong>{c.name}</strong> — {c.issuer}
+                    • <strong>{c.name}</strong> — {c.issuer} {c.issueDate && <span className="text-slate-500 italic">({c.issueDate})</span>}
                   </li>
                 ))}
               </ul>
@@ -205,6 +248,20 @@ export const ClassicTemplate: React.FC<Props> = ({ data }) => {
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {hobbies && hobbies.length > 0 && (
+            <div className="col-span-full">
+              <h2
+                className={`${size.sectionTitle} font-bold uppercase tracking-widest pb-1 mb-1 border-b text-slate-900`}
+                style={{ borderColor: `${accent}40` }}
+              >
+                Interests & Activities
+              </h2>
+              <p className="text-xs text-slate-700 italic">
+                {hobbies.join(' • ')}
+              </p>
             </div>
           )}
         </div>

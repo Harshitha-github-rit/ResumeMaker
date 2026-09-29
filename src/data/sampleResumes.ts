@@ -318,3 +318,165 @@ export const PRODUCT_MANAGER_RESUME: ResumeData = {
     activeSections: ['summary', 'experience', 'education', 'skills', 'projects', 'certifications', 'languages', 'achievements', 'hobbies']
   }
 };
+
+export const FRESHER_RESUME: ResumeData = {
+  id: 'resume-demo-fresher',
+  title: 'Priya Sharma — Entry-Level Software Engineer (Fresher)',
+  updatedAt: new Date().toISOString(),
+  createdAt: new Date().toISOString(),
+  personalInfo: {
+    fullName: 'Priya Sharma',
+    professionalTitle: 'Entry-Level Software Engineer / CS Graduate',
+    email: 'priya.sharma@example.com',
+    phone: '+1 (555) 246-8109',
+    location: 'Austin, TX',
+    linkedin: 'linkedin.com/in/priya-sharma-dev',
+    portfolio: 'priyasharma.dev',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80'
+  },
+  summary: 'High-achieving Computer Science graduate (GPA 3.92/4.0) with hands-on proficiency in React, TypeScript, Python, and cloud fundamentals. Built full-stack applications serving active campus users and won 1st place in regional hackathon. Eager to leverage strong problem-solving skills and modern software engineering best practices in a fast-paced development team.',
+  experience: [
+    {
+      id: 'fresh-exp-1',
+      jobTitle: 'Software Engineering Intern',
+      company: 'Catalyst Software Labs',
+      location: 'Austin, TX',
+      startDate: '2023-05',
+      endDate: '2023-08',
+      isCurrent: false,
+      description: '• Developed responsive React UI components and integrated REST APIs with Node.js, improving page load speed by 25%.\n• Implemented unit tests using Jest and React Testing Library, achieving 88% test coverage for the onboarding flow.\n• Participated in agile sprint ceremonies, daily standups, and bi-weekly sprint reviews.'
+    },
+    {
+      id: 'fresh-exp-2',
+      jobTitle: 'Undergraduate Teaching Assistant (CS 101 & Data Structures)',
+      company: 'University School of Computing',
+      location: 'Austin, TX',
+      startDate: '2022-09',
+      endDate: '2023-05',
+      isCurrent: false,
+      description: '• Conducted weekly lab sessions and code reviews for 65+ students in Python, C++, and Object-Oriented Programming.\n• Assisted professors in grading programming assignments, debugging student code, and explaining algorithmic complexity (Big-O).'
+    }
+  ],
+  education: [
+    {
+      id: 'fresh-edu-1',
+      degree: 'B.S. in Computer Science',
+      institution: 'State University School of Engineering',
+      location: 'Austin, TX',
+      startDate: '2020-09',
+      endDate: '2024-05',
+      gpaOrHonors: 'Summa Cum Laude (GPA 3.92 / 4.0) • Dean\'s Honor List (All Semesters)',
+      description: 'Relevant Coursework: Data Structures & Algorithms, Database Management Systems (SQL), Web Systems, Operating Systems, Machine Learning Fundamentals, Cloud Computing.'
+    }
+  ],
+  skills: [
+    { id: 'fsk-1', name: 'TypeScript / JavaScript', level: 'Advanced', category: 'Languages' },
+    { id: 'fsk-2', name: 'Python & C++', level: 'Advanced', category: 'Languages' },
+    { id: 'fsk-3', name: 'React & Tailwind CSS', level: 'Advanced', category: 'Frontend' },
+    { id: 'fsk-4', name: 'Node.js & Express', level: 'Intermediate', category: 'Backend' },
+    { id: 'fsk-5', name: 'PostgreSQL & MongoDB', level: 'Intermediate', category: 'Databases' },
+    { id: 'fsk-6', name: 'Git, GitHub & Docker', level: 'Advanced', category: 'DevOps' },
+    { id: 'fsk-7', name: 'Data Structures & Algorithms', level: 'Expert', category: 'Core CS' },
+    { id: 'fsk-8', name: 'RESTful API Design', level: 'Advanced', category: 'Architecture' }
+  ],
+  projects: [
+    {
+      id: 'fresh-proj-1',
+      name: 'UniCollab — Real-time Student Study Platform',
+      role: 'Full-Stack Developer',
+      link: 'github.com/priyasharma/unicollab',
+      technologies: 'React, Node.js, Socket.io, Tailwind CSS, PostgreSQL',
+      startDate: '2023-09',
+      endDate: '2024-02',
+      description: 'Built a collaborative peer study application with real-time markdown notes, chat channels, and whiteboard sharing. Adopted by 600+ university students.'
+    },
+    {
+      id: 'fresh-proj-2',
+      name: 'SmartExpense — AI Receipt Analyzer & Budget Tracker',
+      role: 'Sole Developer',
+      link: 'github.com/priyasharma/smartexpense',
+      technologies: 'Python, FastAPI, React, Tesseract OCR, SQLite',
+      startDate: '2023-01',
+      endDate: '2023-04',
+      description: 'Automated receipt parsing and expense categorization using OCR and machine learning heuristics. Processed 1,200+ test receipts with 96% accuracy.'
+    },
+    {
+      id: 'fresh-proj-3',
+      name: 'Algorithm Visualizer Web App',
+      role: 'Creator',
+      link: 'github.com/priyasharma/algo-visualizer',
+      technologies: 'TypeScript, React, HTML5 Canvas',
+      startDate: '2022-10',
+      endDate: '2022-12',
+      description: 'Interactive educational visualization of sorting algorithms (QuickSort, MergeSort) and pathfinding algorithms (Dijkstra, A*).'
+    }
+  ],
+  certifications: [
+    {
+      id: 'fresh-cert-1',
+      name: 'AWS Certified Cloud Practitioner (CLF-C02)',
+      issuer: 'Amazon Web Services',
+      issueDate: '2023-11',
+      credentialUrl: 'aws.amazon.com/verification'
+    },
+    {
+      id: 'fresh-cert-2',
+      name: 'Meta Front-End Developer Professional Certificate',
+      issuer: 'Coursera / Meta',
+      issueDate: '2023-06'
+    },
+    {
+      id: 'fresh-cert-3',
+      name: 'HackerRank Problem Solving (Gold Badge - 5 Stars)',
+      issuer: 'HackerRank',
+      issueDate: '2023-02'
+    }
+  ],
+  languages: [
+    { id: 'fresh-lang-1', name: 'English', proficiency: 'Native' },
+    { id: 'fresh-lang-2', name: 'Spanish', proficiency: 'Professional' },
+    { id: 'fresh-lang-3', name: 'Hindi', proficiency: 'Fluent' }
+  ],
+  achievements: [
+    {
+      id: 'fresh-ach-1',
+      title: '1st Place Winner — HackAustin 2023',
+      organization: 'Austin Tech Collegiate League',
+      year: '2023',
+      description: 'Built a crowd-sourced campus emergency assistance app in 24 hours among 85 university teams.'
+    },
+    {
+      id: 'fresh-ach-2',
+      title: 'Academic Excellence & Merit Scholarship',
+      organization: 'State University Foundation',
+      year: '2020-2024',
+      description: 'Awarded 4-year tuition merit scholarship for maintaining top 2% academic rank in the department.'
+    },
+    {
+      id: 'fresh-ach-3',
+      title: 'LeetCode 500+ Questions Solved',
+      organization: 'LeetCode',
+      year: '2023',
+      description: 'Top 8% global contest rating (1,850+), specializing in Dynamic Programming and Graph Algorithms.'
+    }
+  ],
+  hobbies: ['Competitive Programming', 'Robotics Club Mentor', 'Classical Guitar', 'Badminton'],
+  customization: {
+    template: 'modern',
+    accentColor: '#2563eb',
+    fontFamily: 'font-sans',
+    fontSize: 'normal',
+    spacing: 'normal',
+    margins: 'normal',
+    headingStyle: 'uppercase',
+    showPhoto: true,
+    activeSections: ['summary', 'education', 'skills', 'projects', 'experience', 'certifications', 'achievements', 'languages', 'hobbies']
+  }
+};
+
+export const SAMPLE_RESUMES: ResumeData[] = [
+  DEFAULT_RESUME,
+  PRODUCT_MANAGER_RESUME,
+  FRESHER_RESUME
+];
+

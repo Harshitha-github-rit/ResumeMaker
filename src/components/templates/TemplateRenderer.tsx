@@ -12,9 +12,15 @@ interface Props {
   data?: ResumeData;
   resume?: ResumeData;
   className?: string;
+  page?: 1 | 2;
+  totalPages?: 1 | 2;
 }
 
-export const TemplateRenderer: React.FC<Props> = ({ data, resume, className = '' }) => {
+export const TemplateRenderer: React.FC<Props> = ({
+  data,
+  resume,
+  className = ''
+}) => {
   const activeResume: ResumeData = data || resume || DEFAULT_RESUME;
   const safeCustomization = activeResume.customization || DEFAULT_RESUME.customization;
   const templateId = safeCustomization.template || 'modern';

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Download, CheckCircle2, AlertCircle, Printer, LayoutTemplate } from 'lucide-react';
+import { X, Download, CheckCircle2, AlertCircle, Printer, LayoutTemplate, FileText } from 'lucide-react';
 import { ResumeData } from '../../types';
 import { downloadResumeAsPDF, triggerPrintResume } from '../../utils/pdfExport';
 import { downloadResumeAsWord } from '../../utils/wordExport';
@@ -87,7 +87,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
           });
           setTimeout(() => {
             onClose();
-          }, 500);
+          }, 1200);
         } else {
           setErrorMessage('Could not complete PDF export. Please try again.');
         }
@@ -108,7 +108,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
           });
           setTimeout(() => {
             onClose();
-          }, 500);
+          }, 1200);
         } else {
           setErrorMessage('Could not generate Word document. Please try again.');
         }
@@ -122,7 +122,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
   };
 
   const handleBrowserPrint = () => {
-    triggerPrintResume();
+    triggerPrintResume(resume);
   };
 
   return (
@@ -142,17 +142,17 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden z-10"
+          className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden z-10 flex flex-col max-h-[90vh] sm:max-h-[85vh] my-auto"
         >
-          {/* Header */}
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+          {/* Header (sticky at top) */}
+          <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 shrink-0">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                 <Download className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900">Download Resume</h3>
-                <p className="text-xs text-slate-500">Exact template layout preserved in Word & PDF</p>
+                <h3 className="text-base font-bold text-slate-900 leading-tight">Download Resume</h3>
+                <p className="text-xs text-slate-500 leading-tight">Exact template layout preserved in Word & PDF</p>
               </div>
             </div>
             <button
@@ -164,12 +164,12 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
             </button>
           </div>
 
-          {/* Body */}
-          <div className="p-6 space-y-4">
+          {/* Body (scrollable if screen height is constrained) */}
+          <div className="p-5 space-y-3.5 overflow-y-auto flex-1 overscroll-contain">
             {/* Active Template Notice Pill */}
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+            <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <LayoutTemplate className="w-4 h-4 text-slate-600" />
+                <LayoutTemplate className="w-4 h-4 text-slate-600 shrink-0" />
                 <span className="text-xs text-slate-600 font-medium">Active Template:</span>
               </div>
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-2xs" style={{ backgroundColor: accentColor }}>
@@ -179,87 +179,100 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
             </div>
 
             {/* Format Selection Cards */}
-            <label className="text-xs font-bold text-slate-700 block">
-              Save as Format:
-            </label>
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-2">
+                Save as Format:
+              </label>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Option 1: PDF */}
-              <button
-                type="button"
-                onClick={() => setFormat('pdf')}
-                disabled={isExporting}
-                className={`p-4 rounded-xl border-2 text-left transition-all relative flex flex-col justify-between cursor-pointer ${
-                  format === 'pdf'
-                    ? 'border-blue-600 bg-blue-50/40 shadow-xs ring-2 ring-blue-500/10'
-                    : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/60'
-                }`}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center font-bold text-xs shadow-2xs">
-                    PDF
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* Option 1: PDF */}
+                <button
+                  type="button"
+                  onClick={() => setFormat('pdf')}
+                  disabled={isExporting}
+                  className={`p-3 rounded-xl border-2 text-left transition-all relative flex flex-col justify-between cursor-pointer ${
+                    format === 'pdf'
+                      ? 'border-blue-600 bg-blue-50/40 shadow-xs ring-2 ring-blue-500/10'
+                      : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/60'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="w-9 h-9 rounded-lg bg-red-100 text-red-600 flex items-center justify-center font-bold text-xs shadow-2xs">
+                      PDF
+                    </div>
+                    <div
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                        format === 'pdf' ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300'
+                      }`}
+                    >
+                      {format === 'pdf' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    </div>
                   </div>
-                  <div
-                    className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                      format === 'pdf' ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300'
-                    }`}
-                  >
-                    {format === 'pdf' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="font-bold text-slate-900 text-sm">PDF Document</span>
+                    </div>
+                    <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-700 mb-1">
+                      Exact Template Layout
+                    </span>
+                    <p className="text-[11px] text-slate-500 leading-snug">
+                      Preserves colors, layout, fonts, and styling. Ideal for job applications.
+                    </p>
                   </div>
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className="font-bold text-slate-900 text-sm">PDF Document</span>
-                  </div>
-                  <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-700 mb-1.5">
-                    Exact Template Layout
-                  </span>
-                  <p className="text-[11px] text-slate-500 leading-relaxed">
-                    Preserves colors, layout, fonts, and styling. Ideal for job applications.
-                  </p>
-                </div>
-              </button>
+                </button>
 
-              {/* Option 2: Word (.docx) */}
-              <button
-                type="button"
-                onClick={() => setFormat('word')}
-                disabled={isExporting}
-                className={`p-4 rounded-xl border-2 text-left transition-all relative flex flex-col justify-between cursor-pointer ${
-                  format === 'word'
-                    ? 'border-blue-600 bg-blue-50/40 shadow-xs ring-2 ring-blue-500/10'
-                    : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/60'
-                }`}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shadow-2xs">
-                    DOCX
+                {/* Option 2: Word (.docx) */}
+                <button
+                  type="button"
+                  onClick={() => setFormat('word')}
+                  disabled={isExporting}
+                  className={`p-3 rounded-xl border-2 text-left transition-all relative flex flex-col justify-between cursor-pointer ${
+                    format === 'word'
+                      ? 'border-blue-600 bg-blue-50/40 shadow-xs ring-2 ring-blue-500/10'
+                      : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/60'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shadow-2xs">
+                      DOCX
+                    </div>
+                    <div
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                        format === 'word' ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300'
+                      }`}
+                    >
+                      {format === 'word' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    </div>
                   </div>
-                  <div
-                    className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                      format === 'word' ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300'
-                    }`}
-                  >
-                    {format === 'word' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="font-bold text-slate-900 text-sm">Word Document</span>
+                    </div>
+                    <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 mb-1">
+                      Template-Formatted (.docx)
+                    </span>
+                    <p className="text-[11px] text-slate-500 leading-snug">
+                      Formatted in this template's exact layout for MS Word & Google Docs. Fully editable.
+                    </p>
                   </div>
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className="font-bold text-slate-900 text-sm">Word Document</span>
-                  </div>
-                  <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 mb-1.5">
-                    Template-Formatted (.docx)
-                  </span>
-                  <p className="text-[11px] text-slate-500 leading-relaxed">
-                    Formatted in this template's exact layout for MS Word & Google Docs. Fully editable.
-                  </p>
-                </div>
-              </button>
+                </button>
+              </div>
+            </div>
+
+            {/* Guarantee 1-Page Badge Notice */}
+            <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200/90 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-blue-600 shrink-0" />
+                <span className="text-xs font-bold text-slate-900">Ultra-HD Clarity (Single Page):</span>
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-600 text-white shadow-2xs">
+                Ultra-Clear 300 DPI
+              </span>
             </div>
 
             {/* File Name input */}
-            <div className="pt-2">
-              <label className="text-xs font-bold text-slate-700 block mb-1.5">
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">
                 File Name:
               </label>
               <div className="relative flex items-center">
@@ -278,7 +291,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
             </div>
 
             {/* Browser Native Print Shortcut */}
-            <div className="pt-1 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 pt-3">
+            <div className="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 pt-2.5">
               <span>Need 100% vector printing or Save as PDF?</span>
               <button
                 type="button"
@@ -295,7 +308,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
               <motion.div
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-xs font-semibold text-emerald-800"
+                className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-xs font-semibold text-emerald-800"
               >
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>{statusMessage || 'File downloaded successfully!'}</span>
@@ -306,7 +319,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
               <motion.div
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-3 rounded-xl bg-red-50 border border-red-200 flex items-center gap-2 text-xs font-medium text-red-800"
+                className="p-2.5 rounded-xl bg-red-50 border border-red-200 flex items-center gap-2 text-xs font-medium text-red-800"
               >
                 <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
                 <span>{errorMessage}</span>
@@ -314,8 +327,8 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
             )}
           </div>
 
-          {/* Footer Actions */}
-          <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+          {/* Footer Actions (sticky at bottom) */}
+          <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5 shrink-0">
             <button
               type="button"
               onClick={onClose}

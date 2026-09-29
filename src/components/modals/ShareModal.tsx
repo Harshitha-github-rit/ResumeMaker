@@ -13,6 +13,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { ResumeData } from '../../types';
+import { useResume } from '../../context/ResumeContext';
 import { generateResumeShareUrl } from '../../utils/shareUtils';
 import confetti from 'canvas-confetti';
 
@@ -27,7 +28,15 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   onClose,
   resume
 }) => {
+  const { publishResume } = useResume();
   const [copied, setCopied] = useState(false);
+
+  // When share modal is opened for a resume, mark it as published in Firestore
+  React.useEffect(() => {
+    if (isOpen && resume?.id && publishResume) {
+      publishResume(resume.id);
+    }
+  }, [isOpen, resume?.id, publishResume]);
 
   if (!isOpen) return null;
 

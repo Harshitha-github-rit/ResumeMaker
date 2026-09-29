@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useResume } from '../context/ResumeContext';
-import { FileText, Menu, X, Sparkles, ChevronDown, User, LogOut, LayoutDashboard, PlusCircle } from 'lucide-react';
+import { FileText, Menu, X, Sparkles, ChevronDown, User, LogOut, LayoutDashboard, PlusCircle, Download } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const { user, isAuthenticated, openAuthModal, logout } = useAuth();
@@ -184,6 +184,15 @@ export const Navbar: React.FC = () => {
                         <PlusCircle className="w-4 h-4 text-slate-400" />
                         Create New Resume
                       </button>
+                      <a
+                        href="/resumecraft-source.zip"
+                        download="resumecraft-source.zip"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                        className="w-full text-left px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                      >
+                        <Download className="w-4 h-4 text-blue-500" />
+                        Download Project (ZIP)
+                      </a>
                       <div className="border-t border-slate-100 my-1"></div>
                       <button
                         onClick={() => {
@@ -218,13 +227,29 @@ export const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile hamburger menu toggle */}
-          <div className="flex md:hidden items-center gap-2">
+          {/* Mobile quick actions & hamburger menu toggle */}
+          <div className="flex md:hidden items-center gap-1.5">
+            {!isAuthenticated ? (
+              <button
+                onClick={() => openAuthModal('login')}
+                className="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                Login
+              </button>
+            ) : (
+              <button
+                onClick={() => handleNavClick('dashboard')}
+                className="px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+              >
+                Dashboard
+              </button>
+            )}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              aria-label="Toggle navigation menu"
             >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
@@ -272,6 +297,15 @@ export const Navbar: React.FC = () => {
               Dashboard
             </button>
           )}
+          <a
+            href="/resumecraft-source.zip"
+            download="resumecraft-source.zip"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-blue-600 bg-blue-50/70 hover:bg-blue-100/70 rounded-lg cursor-pointer"
+          >
+            <Download className="w-4 h-4 text-blue-600" />
+            Download Project (ZIP)
+          </a>
 
           <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
             {isAuthenticated ? (

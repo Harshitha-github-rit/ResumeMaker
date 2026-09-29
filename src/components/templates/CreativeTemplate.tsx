@@ -5,10 +5,12 @@ import { getFontFamilyClass, getFontSizeClass, getSpacingClass, getMarginPadding
 
 interface Props {
   data: ResumeData;
+  page?: 1 | 2;
+  totalPages?: 1 | 2;
 }
 
 export const CreativeTemplate: React.FC<Props> = ({ data }) => {
-  const { personalInfo, summary, experience, education, skills, projects, certifications, languages, hobbies, customization } = data;
+  const { personalInfo, summary, experience, education, skills, projects, certifications, languages, achievements, hobbies, customization } = data;
   const accent = customization.accentColor || '#7c3aed';
   const fontClass = getFontFamilyClass(customization.fontFamily);
   const size = getFontSizeClass(customization.fontSize);
@@ -16,10 +18,10 @@ export const CreativeTemplate: React.FC<Props> = ({ data }) => {
   const padding = getMarginPadding(customization.margins);
 
   return (
-    <div className={`w-full bg-white text-slate-800 ${fontClass} ${size.root} shadow-sm min-h-[1050px] flex`}>
+    <div className={`w-full bg-white text-slate-800 ${fontClass} ${size.root} shadow-sm box-border flex`}>
       {/* Creative Left Side Column */}
       <div
-        className="w-[34%] text-white p-6 flex flex-col justify-between"
+        className="w-[34%] text-white p-5 flex flex-col justify-between shrink-0"
         style={{
           background: `linear-gradient(180deg, ${accent} 0%, #1e1b4b 100%)`
         }}
@@ -188,15 +190,21 @@ export const CreativeTemplate: React.FC<Props> = ({ data }) => {
             </h2>
             <div className="space-y-2.5 text-xs">
               {projects.map(proj => (
-                <div key={proj.id} className="p-2 rounded bg-slate-50 border border-slate-100">
-                  <div className="flex justify-between font-bold text-slate-900">
+                <div key={proj.id} className="p-2.5 rounded bg-slate-50 border border-slate-100">
+                  <div className="flex justify-between items-baseline font-bold text-slate-900">
                     <span>{proj.name}</span>
-                    {proj.role && <span className="font-normal text-slate-500 text-[11px]">{proj.role}</span>}
+                    <div className="text-[11px] text-slate-500 font-normal space-x-1">
+                      {proj.role && <span>{proj.role}</span>}
+                      {proj.startDate && <span>• {formatDates(proj.startDate, proj.endDate)}</span>}
+                    </div>
                   </div>
-                  {proj.technologies && (
-                    <span className="text-[10.5px] font-mono text-purple-600 block">{proj.technologies}</span>
+                  {proj.link && (
+                    <span className="text-[11px] text-purple-700 font-mono block">{proj.link}</span>
                   )}
-                  <p className="text-slate-600 mt-0.5">{proj.description}</p>
+                  {proj.technologies && (
+                    <span className="text-[10.5px] font-mono text-purple-600 block mb-0.5">{proj.technologies}</span>
+                  )}
+                  <p className="text-slate-600 mt-0.5 leading-relaxed">{proj.description}</p>
                 </div>
               ))}
             </div>
@@ -209,16 +217,64 @@ export const CreativeTemplate: React.FC<Props> = ({ data }) => {
             <h2 className={`${size.sectionTitle} font-bold uppercase tracking-wider mb-2 text-slate-900 pb-1 border-b`}>
               Education
             </h2>
-            <div className="space-y-2 text-xs">
+            <div className="space-y-2.5 text-xs">
               {education.map(edu => (
-                <div key={edu.id} className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-bold text-slate-900">{edu.degree}</h3>
-                    <p className="text-slate-600">{edu.institution} {edu.location && `• ${edu.location}`}</p>
+                <div key={edu.id}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-bold text-slate-900">{edu.degree}</h3>
+                      <p className="text-slate-600">{edu.institution} {edu.location && `• ${edu.location}`}</p>
+                    </div>
+                    <span className="text-[11px] text-slate-400 font-mono shrink-0">
+                      {formatDates(edu.startDate, edu.endDate)}
+                    </span>
                   </div>
-                  <span className="text-[11px] text-slate-400">
-                    {formatDates(edu.startDate, edu.endDate)}
-                  </span>
+                  {edu.gpaOrHonors && (
+                    <p className="text-[11px] font-medium text-purple-800 mt-0.5">{edu.gpaOrHonors}</p>
+                  )}
+                  {edu.description && (
+                    <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">{edu.description}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Key Achievements */}
+        {achievements && achievements.length > 0 && (
+          <div>
+            <h2 className={`${size.sectionTitle} font-bold uppercase tracking-wider mb-2 text-slate-900 pb-1 border-b`}>
+              Honors & Achievements
+            </h2>
+            <div className="space-y-2 text-xs">
+              {achievements.map(ach => (
+                <div key={ach.id} className="p-2 rounded bg-purple-50/60 border border-purple-100">
+                  <div className="flex justify-between items-baseline">
+                    <strong className="text-slate-900">{ach.title}</strong>
+                    {ach.year && <span className="text-[11px] text-purple-700 font-medium">{ach.year}</span>}
+                  </div>
+                  {ach.organization && <span className="text-[11px] text-slate-500 block">{ach.organization}</span>}
+                  {ach.description && <p className="text-slate-600 mt-0.5">{ach.description}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Certifications */}
+        {certifications && certifications.length > 0 && (
+          <div>
+            <h2 className={`${size.sectionTitle} font-bold uppercase tracking-wider mb-2 text-slate-900 pb-1 border-b`}>
+              Certifications & Badges
+            </h2>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {certifications.map(c => (
+                <div key={c.id} className="p-2 rounded bg-slate-50 border border-slate-100">
+                  <p className="font-semibold text-slate-900">{c.name}</p>
+                  <p className="text-[11px] text-slate-500">
+                    {c.issuer} {c.issueDate && `• ${c.issueDate}`}
+                  </p>
                 </div>
               ))}
             </div>

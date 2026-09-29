@@ -33,28 +33,30 @@ service cloud.firestore {
       allow get: if true;
     }
 
-    // User Profile: strict PII isolation
+    // User Profile: strict privacy & PII isolation - only the authenticated owner can access their profile
     match /users/{userId} {
-      allow get: if isOwner(userId) || isValidId(userId);
+      allow get: if isOwner(userId);
       allow list: if false;
-      allow create: if (isOwner(userId) || isValidId(userId)) 
+      allow create: if isOwner(userId) 
         && incoming().id == userId 
         && incoming().email is string 
         && incoming().email.size() <= 200;
-      allow update: if (isOwner(userId) || isValidId(userId)) 
+      allow update: if isOwner(userId) 
         && incoming().id == existing().id;
       allow delete: if isOwner(userId);
     }
 
-    // Resumes: allow public get by direct ID link so shared resume links open for anyone
+    // Resumes: strict user isolation.
+    // Users can ONLY query/list their own resumes.
+    // A resume is only readable by others if the owner explicitly published/shared it (isPublic == true).
     match /resumes/{resumeId} {
-      allow get: if true;
-      allow list: if (isSignedIn() && resource.data.userId == request.auth.uid)
-        || resource.data.isPublic == true;
+      allow get: if (resource.data.isPublic == true) 
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow create: if (isSignedIn() && incoming().userId == request.auth.uid)
-        || (incoming().userId is string && isValidId(resumeId));
-      allow update: if (isSignedIn() && (resource.data.userId == request.auth.uid || incoming().userId == resource.data.userId))
-        || (incoming().userId is string && isValidId(resumeId));
+        || (!isSignedIn() && incoming().userId == 'guest');
+      allow update: if (isSignedIn() && resource.data.userId == request.auth.uid && incoming().userId == request.auth.uid)
+        || (!isSignedIn() && resource.data.userId == 'guest');
       allow delete: if isSignedIn() 
         && isValidId(resumeId) 
         && resource.data.userId == request.auth.uid;

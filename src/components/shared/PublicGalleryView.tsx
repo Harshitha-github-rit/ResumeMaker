@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { ResumeData } from '../../types';
-import { useResume } from '../../context/ResumeContext';
 import { useAuth } from '../../context/AuthContext';
-import { TEMPLATES_LIST } from '../../data/sampleResumes';
+import { TEMPLATES_LIST, SAMPLE_RESUMES } from '../../data/sampleResumes';
 import { TemplateRenderer } from '../templates/TemplateRenderer';
 import { DownloadModal } from '../modals/DownloadModal';
 import { ShareModal } from '../modals/ShareModal';
@@ -31,13 +30,13 @@ export const PublicGalleryView: React.FC<PublicGalleryViewProps> = ({
   onNavigateHome,
   onCreateNew
 }) => {
-  const { resumes } = useResume();
   const { isAuthenticated, openAuthModal } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [downloadTarget, setDownloadTarget] = useState<ResumeData | null>(null);
   const [shareTarget, setShareTarget] = useState<ResumeData | null>(null);
 
-  const filtered = resumes.filter(r =>
+  // Strictly showcase curated sample templates in the public gallery to protect user privacy
+  const filtered = SAMPLE_RESUMES.filter(r =>
     r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.personalInfo?.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.personalInfo?.professionalTitle?.toLowerCase().includes(searchQuery.toLowerCase())

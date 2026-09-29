@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, AuthState } from '../types';
 import {
-  signInWithPopup,
-  GoogleAuthProvider,
+  setPersistence,
+  browserSessionPersistence,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
@@ -12,13 +12,18 @@ import {
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 
+// Automatically enforce browser session persistence so user is logged out when tab or browser closes
+setPersistence(auth, browserSessionPersistence).catch((err) => {
+  console.warn('Firebase session persistence configuration note:', err);
+});
+
 export interface RegisteredUser {
   id: string;
   name: string;
   email: string;
   password?: string;
   avatar?: string;
-  plan: 'Free' | 'Pro';
+  plan?: 'Free';
   createdAt: string;
 }
 
@@ -32,7 +37,6 @@ interface AuthContextType extends AuthState {
   closeAuthModal: () => void;
   login: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   signup: (name: string, email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
-  loginWithGoogle: (googleEmail?: string, googleName?: string) => Promise<{ success: boolean; isRestricted?: boolean; error?: string }>;
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
 }
@@ -59,7 +63,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [user, setUser] = useState<User | null>(() => {
     try {
-      const stored = localStorage.getItem('resumecraft_user_v3');
+      // Clear any legacy persistent storage so sessions do NOT persist across browser/tab closes
+      localStorage.removeItem('resumecraft_user_v3');
+      localStorage.removeItem('resumecraft_user');
+
+      // Read from sessionStorage (automatically purged by browser when tab or window is closed)
+      const stored = sessionStorage.getItem('resumecraft_user_session');
       if (stored) {
         const parsed = JSON.parse(stored);
         return parsed || null;
@@ -85,7 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
           email: fbUser.email || '',
           avatar: fbUser.photoURL || undefined,
-          plan: 'Pro'
+          plan: 'Free'
         };
         setUser(sessionUser);
         setIsCloudConnected(true);
@@ -98,11 +107,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             name: sessionUser.name,
             email: sessionUser.email,
             avatar: sessionUser.avatar || '',
-            plan: 'Pro',
+            plan: 'Free',
             updatedAt: new Date().toISOString()
           }, { merge: true });
         } catch (e) {
           console.warn('Could not sync user profile to Firestore:', e);
+        }
+      } else {
+        // If Firebase Auth session is null, ensure sessionStorage reflects logged-out state
+        const stored = sessionStorage.getItem('resumecraft_user_session');
+        if (!stored) {
+          setUser(null);
         }
       }
     });
@@ -110,7 +125,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  // Sync registered users to localStorage
+  // Sync registered users to localStorage so user can re-login after closing tab
   useEffect(() => {
     try {
       localStorage.setItem('resumecraft_registered_users_v3', JSON.stringify(registeredUsers));
@@ -119,16 +134,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [registeredUsers]);
 
-  // Sync active user session
+  // Sync active user session ONLY to sessionStorage (wiped on tab or window close)
   useEffect(() => {
     try {
       if (user) {
-        localStorage.setItem('resumecraft_user_v3', JSON.stringify(user));
+        sessionStorage.setItem('resumecraft_user_session', JSON.stringify(user));
       } else {
-        localStorage.removeItem('resumecraft_user_v3');
+        sessionStorage.removeItem('resumecraft_user_session');
       }
+      // Guarantee localStorage never holds an active user login
+      localStorage.removeItem('resumecraft_user_v3');
+      localStorage.removeItem('resumecraft_user');
     } catch (e) {
-      console.error('LocalStorage write error', e);
+      console.error('Session write error', e);
     }
   }, [user]);
 
@@ -149,144 +167,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setPostAuthCallback(null);
   };
 
-  const loginWithGoogle = async (
-    googleEmail?: string,
-    googleName?: string
-  ): Promise<{ success: boolean; isRestricted?: boolean; error?: string }> => {
-    // 1. Direct Google email sign-in (instantly bypasses iframe / domain popup blocks)
-    if (googleEmail && googleEmail.trim()) {
-      const normalizedEmail = googleEmail.trim().toLowerCase();
-      const rawName = googleName?.trim() || normalizedEmail.split('@')[0].replace(/[._-]/g, ' ');
-      const formattedName = rawName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || 'Google User';
-      const cleanHash = Math.abs(normalizedEmail.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0)).toString(36);
-      const userId = 'google_' + cleanHash;
-
-      const sessionUser: User = {
-        id: userId,
-        name: formattedName,
-        email: normalizedEmail,
-        avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(formattedName)}&backgroundColor=2563eb,4f46e5`,
-        plan: 'Pro'
-      };
-
-      setUser(sessionUser);
-
-      const registeredItem: RegisteredUser = {
-        id: sessionUser.id,
-        name: sessionUser.name,
-        email: sessionUser.email,
-        avatar: sessionUser.avatar,
-        plan: 'Pro',
-        createdAt: new Date().toISOString()
-      };
-
-      setRegisteredUsers(prev => {
-        const filtered = prev.filter(u => u.email.toLowerCase() !== normalizedEmail);
-        return [...filtered, registeredItem];
-      });
-
-      // Sync to Firestore users collection
-      try {
-        const userDocRef = doc(db, 'users', sessionUser.id);
-        await setDoc(userDocRef, {
-          id: sessionUser.id,
-          name: sessionUser.name,
-          email: sessionUser.email,
-          avatar: sessionUser.avatar || '',
-          plan: 'Pro',
-          provider: 'google.com',
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
-      } catch (e) {
-        console.warn('Firestore user profile sync warning:', e);
-      }
-
-      closeAuthModal();
-      if (postAuthCallback) {
-        postAuthCallback();
-        setPostAuthCallback(null);
-      }
-      return { success: true };
-    }
-
-    // 2. Native Firebase popup attempt
-    try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
-      const result = await signInWithPopup(auth, provider);
-      const fbUser = result.user;
-
-      const sessionUser: User = {
-        id: fbUser.uid,
-        name: fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
-        email: fbUser.email || '',
-        avatar: fbUser.photoURL || undefined,
-        plan: 'Pro'
-      };
-
-      setUser(sessionUser);
-
-      // Save to registered users list as well
-      setRegisteredUsers(prev => {
-        const filtered = prev.filter(u => u.email.toLowerCase() !== sessionUser.email.toLowerCase());
-        return [
-          ...filtered,
-          {
-            id: sessionUser.id,
-            name: sessionUser.name,
-            email: sessionUser.email,
-            avatar: sessionUser.avatar,
-            plan: 'Pro',
-            createdAt: new Date().toISOString()
-          }
-        ];
-      });
-
-      // Save to Firestore users collection
-      try {
-        const userDocRef = doc(db, 'users', fbUser.uid);
-        await setDoc(userDocRef, {
-          id: fbUser.uid,
-          name: sessionUser.name,
-          email: sessionUser.email,
-          avatar: sessionUser.avatar || '',
-          plan: 'Pro',
-          provider: 'google.com',
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
-      } catch (e) {
-        console.warn('Firestore user profile sync warning:', e);
-      }
-
-      closeAuthModal();
-      if (postAuthCallback) {
-        postAuthCallback();
-        setPostAuthCallback(null);
-      }
-      return { success: true };
-    } catch (err: any) {
-      console.warn('Google sign-in popup encountered restriction:', err);
-      const errorCode = err?.code || '';
-      const isRestricted = 
-        errorCode === 'auth/unauthorized-domain' ||
-        errorCode === 'auth/popup-blocked' ||
-        errorCode === 'auth/operation-not-allowed' ||
-        errorCode === 'auth/cancelled-popup-request' ||
-        errorCode === 'auth/internal-error' ||
-        errorCode === 'auth/popup-closed-by-user' ||
-        String(err?.message || '').includes('unauthorized') ||
-        String(err?.message || '').includes('popup');
-
-      return {
-        success: false,
-        isRestricted,
-        error: isRestricted
-          ? 'Google popup was restricted by browser/domain. Enter your Google email below to continue instantly.'
-          : (err.message || 'Google sign-in could not be completed.')
-      };
-    }
-  };
-
   const login = async (email: string, pass: string) => {
     const normalizedEmail = email.trim().toLowerCase();
 
@@ -295,6 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
+      await setPersistence(auth, browserSessionPersistence);
       const cred = await signInWithEmailAndPassword(auth, normalizedEmail, pass);
       const fbUser = cred.user;
       const sessionUser: User = {
@@ -302,7 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         name: fbUser.displayName || normalizedEmail.split('@')[0],
         email: normalizedEmail,
         avatar: fbUser.photoURL || undefined,
-        plan: 'Pro'
+        plan: 'Free'
       };
       setUser(sessionUser);
 
@@ -312,7 +193,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: fbUser.uid,
           name: sessionUser.name,
           email: sessionUser.email,
-          plan: 'Pro',
+          plan: 'Free',
           updatedAt: new Date().toISOString()
         }, { merge: true });
       } catch {}
@@ -339,7 +220,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: existing.name,
           email: existing.email,
           avatar: existing.avatar,
-          plan: 'Pro'
+          plan: 'Free'
         };
         setUser(sessionUser);
 
@@ -349,7 +230,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: sessionUser.id,
             name: sessionUser.name,
             email: sessionUser.email,
-            plan: 'Pro',
+            plan: 'Free',
             updatedAt: new Date().toISOString()
           }, { merge: true });
         } catch {}
@@ -369,7 +250,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         name: normalizedEmail.split('@')[0],
         email: normalizedEmail,
         password: pass,
-        plan: 'Pro',
+        plan: 'Free',
         createdAt: new Date().toISOString()
       };
       setRegisteredUsers(prev => [...prev, newUser]);
@@ -377,7 +258,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: newUser.id,
         name: newUser.name,
         email: newUser.email,
-        plan: 'Pro'
+        plan: 'Free'
       };
       setUser(sessionUser);
 
@@ -387,7 +268,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: sessionUser.id,
           name: sessionUser.name,
           email: sessionUser.email,
-          plan: 'Pro',
+          plan: 'Free',
           createdAt: newUser.createdAt,
           updatedAt: new Date().toISOString()
         }, { merge: true });
@@ -415,6 +296,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
+      await setPersistence(auth, browserSessionPersistence);
       const cred = await createUserWithEmailAndPassword(auth, normalizedEmail, pass);
       const fbUser = cred.user;
       await updateProfile(fbUser, { displayName: trimmedName });
@@ -513,6 +395,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {}
     setUser(null);
     try {
+      sessionStorage.removeItem('resumecraft_user_session');
       localStorage.removeItem('resumecraft_user_v3');
       localStorage.removeItem('resumecraft_user');
     } catch {}
@@ -542,7 +425,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         closeAuthModal,
         login,
         signup,
-        loginWithGoogle,
         logout,
         updateUser
       }}

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { ResumeData, TemplateId, CustomizationSettings } from '../types';
-import { DEFAULT_RESUME, PRODUCT_MANAGER_RESUME } from '../data/sampleResumes';
+import { DEFAULT_RESUME, PRODUCT_MANAGER_RESUME, FRESHER_RESUME } from '../data/sampleResumes';
 import { useAuth } from './AuthContext';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, query, where } from 'firebase/firestore';
@@ -20,19 +20,48 @@ interface ResumeContextType {
   setSharedResumeId: (id: string | null) => void;
   openSharedResume: (id: string) => void;
   selectResume: (id: string) => void;
-  createNewResume: (template?: TemplateId, initialTitle?: string) => string;
+  createNewResume: (template?: TemplateId, initialTitle?: string, profileType?: 'experienced' | 'fresher' | 'pm' | 'blank') => string;
   updateCurrentResume: (updater: Partial<ResumeData> | ((prev: ResumeData) => ResumeData)) => void;
   updateCustomization: (settings: Partial<CustomizationSettings>) => void;
   duplicateResume: (id: string) => string;
   deleteResume: (id: string) => void;
   saveCurrentResume: () => void;
-  loadSampleProfile: (type: 'engineer' | 'pm' | 'blank') => void;
+  publishResume: (id: string) => Promise<boolean>;
+  loadSampleProfile: (type: 'engineer' | 'pm' | 'fresher' | 'blank') => void;
   exportResumeJSON: () => void;
   importResumeJSON: (fileContent: string) => boolean;
 }
 
-const STORAGE_KEY = 'resumecraft_resumes_v2';
-const ACTIVE_ID_KEY = 'resumecraft_active_id';
+// User-scoped storage keys so each user's resumes remain strictly private to them
+const getUserStorageKey = (userId?: string | null) =>
+  userId ? `resumecraft_resumes_u_${userId}` : 'resumecraft_resumes_guest_v3';
+
+const getUserActiveIdKey = (userId?: string | null) =>
+  userId ? `resumecraft_active_id_u_${userId}` : 'resumecraft_active_id_guest_v3';
+
+const createPersonalizedDefaultResume = (u?: { id?: string; name?: string; email?: string } | null): ResumeData => {
+  if (u && u.id) {
+    return {
+      ...DEFAULT_RESUME,
+      id: 'resume-' + Date.now(),
+      userId: u.id,
+      isPublic: false,
+      title: `${u.name || 'My'}'s Resume`,
+      personalInfo: {
+        ...DEFAULT_RESUME.personalInfo,
+        fullName: u.name || 'Alex Rivera',
+        email: u.email || 'alex.rivera@example.com'
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+  }
+  return {
+    ...DEFAULT_RESUME,
+    userId: 'guest',
+    isPublic: false
+  };
+};
 
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
 
@@ -56,25 +85,25 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const { user } = useAuth();
   const [isCloudSyncing, setIsCloudSyncing] = useState(false);
 
+  // Initialize resumes based strictly on the current authenticated user's scoped storage
   const [resumes, setResumes] = useState<ResumeData[]>(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(getUserStorageKey(user?.id));
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const sanitizedList = parsed.map(sanitizeResume);
-          return sanitizedList;
+          return parsed.map(sanitizeResume);
         }
       }
     } catch (e) {
       console.error('Failed to parse stored resumes', e);
     }
-    return [DEFAULT_RESUME, PRODUCT_MANAGER_RESUME];
+    return user ? [createPersonalizedDefaultResume(user)] : [DEFAULT_RESUME, PRODUCT_MANAGER_RESUME];
   });
 
   const [currentResume, setCurrentResume] = useState<ResumeData>(() => {
     try {
-      const activeId = localStorage.getItem(ACTIVE_ID_KEY);
+      const activeId = localStorage.getItem(getUserActiveIdKey(user?.id));
       if (activeId) {
         const found = resumes.find(r => r && r.id === activeId);
         if (found) return sanitizeResume(found);
@@ -111,8 +140,12 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return () => window.removeEventListener('popstate', handleUrlChange);
   }, []);
 
-  // Firestore helper to save a resume (always public so shared link works immediately)
+  // Firestore helper: saves resume under the authenticated owner only.
+  // Private by default (isPublic: false) unless explicitly published.
   const saveResumeToFirestore = async (resume: ResumeData, uid?: string) => {
+    const ownerId = uid || user?.id;
+    if (!ownerId || ownerId === 'guest') return;
+
     try {
       setIsCloudSyncing(true);
       const docRef = doc(db, 'resumes', resume.id);
@@ -120,8 +153,8 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         docRef,
         {
           ...resume,
-          userId: uid || user?.id || 'public_author',
-          isPublic: true,
+          userId: ownerId,
+          isPublic: resume.isPublic === true,
           updatedAt: new Date().toISOString()
         },
         { merge: true }
@@ -133,19 +166,48 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  // Ensure all local resumes are saved with public view permission in Firestore
+  // Switch to the logged-in user's scoped data immediately upon login/logout.
+  // This completely isolates user data: no user ever sees another user's resumes!
   useEffect(() => {
-    resumes.forEach(r => {
-      saveResumeToFirestore(r, user?.id);
-    });
-  }, []);
+    const currentUserId = user?.id || null;
+    const storageKey = getUserStorageKey(currentUserId);
+    const activeKey = getUserActiveIdKey(currentUserId);
 
-  // Real-time Cloud Sync with Firestore
-  useEffect(() => {
-    if (!user?.id) return;
+    let loadedResumes: ResumeData[] = [];
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          loadedResumes = parsed.map(sanitizeResume);
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading user storage:', e);
+    }
 
+    if (loadedResumes.length === 0) {
+      if (currentUserId && user) {
+        loadedResumes = [createPersonalizedDefaultResume(user)];
+      } else {
+        loadedResumes = [DEFAULT_RESUME, PRODUCT_MANAGER_RESUME];
+      }
+    }
+
+    setResumes(loadedResumes);
+
+    const activeId = localStorage.getItem(activeKey);
+    const active = loadedResumes.find(r => r.id === activeId) || loadedResumes[0];
+    setCurrentResume(active);
+
+    // If user is not logged in, stop here (no cloud connection)
+    if (!currentUserId) {
+      return;
+    }
+
+    // Subscribe to Firestore for THIS USER ONLY (where('userId', '==', currentUserId))
     const resumesCol = collection(db, 'resumes');
-    const q = query(resumesCol, where('userId', '==', user.id));
+    const q = query(resumesCol, where('userId', '==', currentUserId));
 
     const unsubscribe = onSnapshot(
       q,
@@ -154,52 +216,88 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const cloudResumes: ResumeData[] = [];
           snapshot.forEach(docSnap => {
             const item = docSnap.data() as ResumeData;
-            if (item && item.id) {
+            // Strict check: only include resumes that belong to the current authenticated user
+            if (item && item.id && item.userId === currentUserId) {
               cloudResumes.push(sanitizeResume(item));
             }
           });
+
           if (cloudResumes.length > 0) {
             setResumes(cloudResumes);
             setCurrentResume(curr => {
               const exists = cloudResumes.find(r => r.id === curr.id);
               return exists ? curr : cloudResumes[0];
             });
+            try {
+              localStorage.setItem(storageKey, JSON.stringify(cloudResumes));
+            } catch {}
           }
         } else {
-          // If newly signed in and cloud has no records yet, sync current local resumes to cloud
-          setResumes(localList => {
-            localList.forEach(r => {
-              saveResumeToFirestore(r, user.id);
-            });
-            return localList;
-          });
+          // If newly signed in and cloud has no records yet, upload only this user's personalized resume
+          const firstResume = loadedResumes[0] || createPersonalizedDefaultResume(user);
+          saveResumeToFirestore(firstResume, currentUserId);
         }
       },
       error => {
-        console.warn('Firestore subscription notice:', error);
+        console.warn('Firestore user resume subscription notice:', error);
       }
     );
 
     return () => unsubscribe();
   }, [user?.id]);
 
-  // Keep localStorage up to date with resumes list as offline backup
+  // Keep user-scoped localStorage up to date with resumes list
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(resumes));
+      const storageKey = getUserStorageKey(user?.id);
+      localStorage.setItem(storageKey, JSON.stringify(resumes));
     } catch (e) {
       console.error('Failed to persist resumes to storage', e);
     }
-  }, [resumes]);
+  }, [resumes, user?.id]);
 
-  // Keep active ID in storage
+  // Keep active ID in user-scoped storage
   useEffect(() => {
     try {
       if (currentResume && currentResume.id) {
-        localStorage.setItem(ACTIVE_ID_KEY, currentResume.id);
+        const activeKey = getUserActiveIdKey(user?.id);
+        localStorage.setItem(activeKey, currentResume.id);
       }
     } catch {}
-  }, [currentResume?.id]);
+  }, [currentResume?.id, user?.id]);
+
+  // Ensure resume changes are safely flushed before tab or window is closed
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (user?.id && currentResume) {
+        saveResumeToFirestore(currentResume, user.id);
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [user?.id, currentResume]);
+
+  // Explicitly make a resume public when user shares it
+  const publishResume = async (id: string): Promise<boolean> => {
+    try {
+      setResumes(prev =>
+        prev.map(r => (r.id === id ? { ...r, isPublic: true, updatedAt: new Date().toISOString() } : r))
+      );
+      setCurrentResume(curr =>
+        curr.id === id ? { ...curr, isPublic: true, updatedAt: new Date().toISOString() } : curr
+      );
+
+      const target = resumes.find(r => r.id === id) || (currentResume.id === id ? currentResume : null);
+      if (target && user?.id) {
+        await saveResumeToFirestore({ ...target, isPublic: true }, user.id);
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   // Auto-save logic with debounce
   const triggerAutoSave = (updated: ResumeData) => {
@@ -260,16 +358,47 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  const createNewResume = (template: TemplateId = 'modern', initialTitle?: string): string => {
+  const createNewResume = (
+    template: TemplateId = 'modern',
+    initialTitle?: string,
+    profileType: 'experienced' | 'fresher' | 'pm' | 'blank' = 'experienced'
+  ): string => {
     const newId = 'resume-' + Date.now();
+    let baseData = DEFAULT_RESUME;
+    if (profileType === 'fresher') {
+      baseData = FRESHER_RESUME;
+    } else if (profileType === 'pm') {
+      baseData = PRODUCT_MANAGER_RESUME;
+    } else if (profileType === 'blank') {
+      baseData = {
+        ...DEFAULT_RESUME,
+        summary: '',
+        experience: [],
+        education: [],
+        skills: [],
+        projects: [],
+        certifications: [],
+        languages: [],
+        achievements: [],
+        hobbies: []
+      };
+    }
+
     const newResume: ResumeData = {
-      ...DEFAULT_RESUME,
+      ...baseData,
       id: newId,
-      title: initialTitle || 'Untitled Resume',
+      userId: user?.id || 'guest',
+      isPublic: false,
+      title: initialTitle || (profileType === 'fresher' ? 'Fresher Resume' : `${user?.name ? `${user.name}'s` : 'My'} Resume`),
+      personalInfo: user ? {
+        ...baseData.personalInfo,
+        fullName: user.name || baseData.personalInfo.fullName,
+        email: user.email || baseData.personalInfo.email
+      } : baseData.personalInfo,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       customization: {
-        ...DEFAULT_RESUME.customization,
+        ...baseData.customization,
         template: template
       }
     };
@@ -291,6 +420,8 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const clone: ResumeData = {
       ...target,
       id: newId,
+      userId: user?.id || 'guest',
+      isPublic: false,
       title: `${target.title} (Copy)`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -310,7 +441,9 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setResumes(prev => {
       const filtered = prev.filter(r => r.id !== id);
       if (filtered.length === 0) {
-        const fallback = { ...DEFAULT_RESUME, id: 'resume-' + Date.now(), title: 'My New Resume' };
+        const fallback = user 
+          ? createPersonalizedDefaultResume(user)
+          : { ...DEFAULT_RESUME, id: 'resume-' + Date.now(), title: 'My New Resume' };
         setCurrentResume(fallback);
         if (user?.id) {
           saveResumeToFirestore(fallback, user.id);
@@ -354,8 +487,21 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setLastSavedTime(now);
   };
 
-  const loadSampleProfile = (type: 'engineer' | 'pm' | 'blank') => {
-    if (type === 'engineer') {
+  const loadSampleProfile = (type: 'engineer' | 'pm' | 'fresher' | 'blank') => {
+    if (type === 'fresher') {
+      updateCurrentResume({
+        personalInfo: { ...FRESHER_RESUME.personalInfo },
+        summary: FRESHER_RESUME.summary,
+        experience: [...FRESHER_RESUME.experience],
+        education: [...FRESHER_RESUME.education],
+        skills: [...FRESHER_RESUME.skills],
+        projects: [...FRESHER_RESUME.projects],
+        certifications: [...FRESHER_RESUME.certifications],
+        languages: [...FRESHER_RESUME.languages],
+        achievements: [...FRESHER_RESUME.achievements],
+        hobbies: [...FRESHER_RESUME.hobbies]
+      });
+    } else if (type === 'engineer') {
       updateCurrentResume({
         personalInfo: { ...DEFAULT_RESUME.personalInfo },
         summary: DEFAULT_RESUME.summary,
@@ -454,6 +600,7 @@ export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         duplicateResume,
         deleteResume,
         saveCurrentResume,
+        publishResume,
         loadSampleProfile,
         exportResumeJSON,
         importResumeJSON

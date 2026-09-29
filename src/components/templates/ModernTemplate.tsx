@@ -5,6 +5,8 @@ import { getFontFamilyClass, getFontSizeClass, getSpacingClass, getMarginPadding
 
 interface Props {
   data: ResumeData;
+  page?: 1 | 2;
+  totalPages?: 1 | 2;
 }
 
 export const ModernTemplate: React.FC<Props> = ({ data }) => {
@@ -15,11 +17,19 @@ export const ModernTemplate: React.FC<Props> = ({ data }) => {
   const spacing = getSpacingClass(customization.spacing);
   const padding = getMarginPadding(customization.margins);
 
+  const hasSidebarContent = Boolean(
+    (skills && skills.length > 0) ||
+    (education && education.length > 0) ||
+    (certifications && certifications.length > 0) ||
+    (languages && languages.length > 0) ||
+    (hobbies && hobbies.length > 0)
+  );
+
   return (
-    <div className={`w-full bg-white text-slate-800 ${fontClass} ${size.root} ${padding} shadow-sm min-h-[1050px]`}>
+    <div className={`w-full bg-white text-slate-800 ${fontClass} ${size.root} ${padding} shadow-sm box-border`}>
       {/* Header Section */}
-      <div className="border-b pb-6 mb-6" style={{ borderColor: `${accent}30` }}>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="border-b pb-4 mb-4" style={{ borderColor: `${accent}30` }}>
+        <div className="flex flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-5">
             {customization.showPhoto && personalInfo.avatarUrl && (
               <img
@@ -38,45 +48,45 @@ export const ModernTemplate: React.FC<Props> = ({ data }) => {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-slate-600 text-xs md:text-right md:justify-end">
-            {personalInfo.email && (
-              <div className="flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5" style={{ color: accent }} />
-                <span>{personalInfo.email}</span>
-              </div>
-            )}
-            {personalInfo.phone && (
-              <div className="flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5" style={{ color: accent }} />
-                <span>{personalInfo.phone}</span>
-              </div>
-            )}
-            {personalInfo.location && (
-              <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5" style={{ color: accent }} />
-                <span>{personalInfo.location}</span>
-              </div>
-            )}
-            {personalInfo.linkedin && (
-              <div className="flex items-center gap-1.5">
-                <Linkedin className="w-3.5 h-3.5" style={{ color: accent }} />
-                <span>{personalInfo.linkedin}</span>
-              </div>
-            )}
-            {personalInfo.portfolio && (
-              <div className="flex items-center gap-1.5">
-                <Globe className="w-3.5 h-3.5" style={{ color: accent }} />
-                <span>{personalInfo.portfolio}</span>
-              </div>
-            )}
+            <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-slate-600 text-xs text-right justify-end max-w-xs">
+              {personalInfo.email && (
+                <div className="flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5" style={{ color: accent }} />
+                  <span>{personalInfo.email}</span>
+                </div>
+              )}
+              {personalInfo.phone && (
+                <div className="flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5" style={{ color: accent }} />
+                  <span>{personalInfo.phone}</span>
+                </div>
+              )}
+              {personalInfo.location && (
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5" style={{ color: accent }} />
+                  <span>{personalInfo.location}</span>
+                </div>
+              )}
+              {personalInfo.linkedin && (
+                <div className="flex items-center gap-1.5">
+                  <Linkedin className="w-3.5 h-3.5" style={{ color: accent }} />
+                  <span>{personalInfo.linkedin}</span>
+                </div>
+              )}
+              {personalInfo.portfolio && (
+                <div className="flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5" style={{ color: accent }} />
+                  <span>{personalInfo.portfolio}</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
       {/* Two Column Content Grid */}
-      <div className="grid grid-cols-12 gap-7">
-        {/* Main Column (8 cols) */}
-        <div className={`col-span-8 ${spacing.sectionGap}`}>
+      <div className={hasSidebarContent ? 'grid grid-cols-12 gap-7' : 'w-full'}>
+        {/* Main Column */}
+        <div className={`${hasSidebarContent ? 'col-span-8' : 'w-full'} ${spacing.sectionGap}`}>
           {/* Summary */}
           {summary && (
             <div>
@@ -138,10 +148,16 @@ export const ModernTemplate: React.FC<Props> = ({ data }) => {
                         {proj.name}
                         {proj.link && <ExternalLink className="w-3 h-3 text-slate-400" />}
                       </span>
-                      {proj.role && <span className="text-xs text-slate-500">{proj.role}</span>}
+                      <div className="text-xs text-slate-500 space-x-1 font-mono">
+                        {proj.role && <span>{proj.role}</span>}
+                        {proj.startDate && <span>• {formatDates(proj.startDate, proj.endDate)}</span>}
+                      </div>
                     </div>
+                    {proj.link && (
+                      <span className="text-[11px] text-blue-600 font-mono block">{proj.link}</span>
+                    )}
                     {proj.technologies && (
-                      <p className="text-[11px] font-mono text-slate-500 mb-1">
+                      <p className="text-[11px] font-mono text-slate-500 mb-0.5">
                         Tech: {proj.technologies}
                       </p>
                     )}
@@ -177,118 +193,123 @@ export const ModernTemplate: React.FC<Props> = ({ data }) => {
           )}
         </div>
 
-        {/* Sidebar Column (4 cols) */}
-        <div className={`col-span-4 ${spacing.sectionGap} bg-slate-50/70 p-4 rounded-lg border border-slate-100`}>
-          {/* Skills */}
-          {skills && skills.length > 0 && (
-            <div>
-              <h2
-                className={`${size.sectionTitle} font-bold mb-2 pb-1 border-b`}
-                style={{ color: accent, borderColor: `${accent}35` }}
-              >
-                CORE SKILLS
-              </h2>
-              <div className="flex flex-wrap gap-1.5">
-                {skills.map(skill => (
-                  <span
-                    key={skill.id}
-                    className="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-white text-slate-800 border border-slate-200 shadow-2xs"
-                  >
-                    {skill.name}
-                    {skill.level && (
-                      <span className="ml-1 text-[9.5px] opacity-70">
-                        • {skill.level}
-                      </span>
-                    )}
-                  </span>
-                ))}
+        {/* Sidebar Column (4 cols) - Seamless integrated column, no floating card or image box effect */}
+        {hasSidebarContent && (
+          <div className={`col-span-4 ${spacing.sectionGap} pl-5 border-l border-slate-200/80`}>
+            {/* Skills */}
+            {skills && skills.length > 0 && (
+              <div>
+                <h2
+                  className={`${size.sectionTitle} font-bold mb-2 pb-1 border-b`}
+                  style={{ color: accent, borderColor: `${accent}35` }}
+                >
+                  CORE SKILLS
+                </h2>
+                <div className="flex flex-wrap gap-1.5">
+                  {skills.map(skill => (
+                    <span
+                      key={skill.id}
+                      className="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100/90 text-slate-800 border border-slate-200/80"
+                    >
+                      {skill.name}
+                      {skill.level && (
+                        <span className="ml-1 text-[9.5px] opacity-70">
+                          • {skill.level}
+                        </span>
+                      )}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Education */}
-          {education && education.length > 0 && (
-            <div>
-              <h2
-                className={`${size.sectionTitle} font-bold mb-2 pb-1 border-b`}
-                style={{ color: accent, borderColor: `${accent}35` }}
-              >
-                EDUCATION
-              </h2>
-              <div className="space-y-2.5">
-                {education.map(edu => (
-                  <div key={edu.id} className="text-xs">
-                    <h3 className="font-bold text-slate-900">{edu.degree}</h3>
-                    <p className="font-medium text-slate-700">{edu.institution}</p>
-                    <p className="text-slate-500 text-[11px]">
-                      {formatDates(edu.startDate, edu.endDate)} {edu.location && `| ${edu.location}`}
-                    </p>
-                    {edu.gpaOrHonors && (
-                      <p className="text-[11px] text-slate-600 font-medium mt-0.5">{edu.gpaOrHonors}</p>
-                    )}
-                  </div>
-                ))}
+            {/* Education */}
+            {education && education.length > 0 && (
+              <div>
+                <h2
+                  className={`${size.sectionTitle} font-bold mb-2 pb-1 border-b`}
+                  style={{ color: accent, borderColor: `${accent}35` }}
+                >
+                  EDUCATION
+                </h2>
+                <div className="space-y-2.5">
+                  {education.map(edu => (
+                    <div key={edu.id} className="text-xs">
+                      <h3 className="font-bold text-slate-900">{edu.degree}</h3>
+                      <p className="font-medium text-slate-700">{edu.institution}</p>
+                      <p className="text-slate-500 text-[11px]">
+                        {formatDates(edu.startDate, edu.endDate)} {edu.location && `| ${edu.location}`}
+                      </p>
+                      {edu.gpaOrHonors && (
+                        <p className="text-[11px] text-slate-600 font-medium mt-0.5">{edu.gpaOrHonors}</p>
+                      )}
+                      {edu.description && (
+                        <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{edu.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Certifications */}
-          {certifications && certifications.length > 0 && (
-            <div>
-              <h2
-                className={`${size.sectionTitle} font-bold mb-2 pb-1 border-b`}
-                style={{ color: accent, borderColor: `${accent}35` }}
-              >
-                CERTIFICATIONS
-              </h2>
-              <div className="space-y-2 text-xs">
-                {certifications.map(cert => (
-                  <div key={cert.id}>
-                    <p className="font-semibold text-slate-900">{cert.name}</p>
-                    <p className="text-[11px] text-slate-600">
-                      {cert.issuer} {cert.issueDate && `(${cert.issueDate})`}
-                    </p>
-                  </div>
-                ))}
+            {/* Certifications */}
+            {certifications && certifications.length > 0 && (
+              <div>
+                <h2
+                  className={`${size.sectionTitle} font-bold mb-2 pb-1 border-b`}
+                  style={{ color: accent, borderColor: `${accent}35` }}
+                >
+                  CERTIFICATIONS
+                </h2>
+                <div className="space-y-2 text-xs">
+                  {certifications.map(cert => (
+                    <div key={cert.id}>
+                      <p className="font-semibold text-slate-900">{cert.name}</p>
+                      <p className="text-[11px] text-slate-600">
+                        {cert.issuer} {cert.issueDate && `(${cert.issueDate})`}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Languages */}
-          {languages && languages.length > 0 && (
-            <div>
-              <h2
-                className={`${size.sectionTitle} font-bold mb-2 pb-1 border-b`}
-                style={{ color: accent, borderColor: `${accent}35` }}
-              >
-                LANGUAGES
-              </h2>
-              <div className="space-y-1 text-xs">
-                {languages.map(lang => (
-                  <div key={lang.id} className="flex justify-between text-slate-700">
-                    <span className="font-medium text-slate-900">{lang.name}</span>
-                    <span className="text-slate-500 text-[11px]">{lang.proficiency}</span>
-                  </div>
-                ))}
+            {/* Languages */}
+            {languages && languages.length > 0 && (
+              <div>
+                <h2
+                  className={`${size.sectionTitle} font-bold mb-2 pb-1 border-b`}
+                  style={{ color: accent, borderColor: `${accent}35` }}
+                >
+                  LANGUAGES
+                </h2>
+                <div className="space-y-1 text-xs">
+                  {languages.map(lang => (
+                    <div key={lang.id} className="flex justify-between text-slate-700">
+                      <span className="font-medium text-slate-900">{lang.name}</span>
+                      <span className="text-slate-500 text-[11px]">{lang.proficiency}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Interests */}
-          {hobbies && hobbies.length > 0 && (
-            <div>
-              <h2
-                className={`${size.sectionTitle} font-bold mb-2 pb-1 border-b`}
-                style={{ color: accent, borderColor: `${accent}35` }}
-              >
-                INTERESTS
-              </h2>
-              <p className="text-xs text-slate-600 leading-normal">
-                {hobbies.join(' • ')}
-              </p>
-            </div>
-          )}
-        </div>
+            {/* Interests */}
+            {hobbies && hobbies.length > 0 && (
+              <div>
+                <h2
+                  className={`${size.sectionTitle} font-bold mb-2 pb-1 border-b`}
+                  style={{ color: accent, borderColor: `${accent}35` }}
+                >
+                  INTERESTS
+                </h2>
+                <p className="text-xs text-slate-600 leading-normal">
+                  {hobbies.join(' • ')}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

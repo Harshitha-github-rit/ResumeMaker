@@ -9,6 +9,7 @@ import { printResume } from '../../utils/pdfExport';
 import { DownloadModal } from '../modals/DownloadModal';
 import { ShareModal } from '../modals/ShareModal';
 import { TemplateId } from '../../types';
+import { TemplateRenderer } from '../templates/TemplateRenderer';
 import {
   ArrowLeft,
   Sliders,
@@ -27,7 +28,8 @@ import {
   LogOut,
   Cloud,
   Check,
-  Share2
+  Share2,
+  Laptop
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -48,7 +50,7 @@ export const ResumeBuilder: React.FC = () => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
+  const [mobileTab, setMobileTab] = useState<'laptop' | 'edit' | 'preview'>('edit');
 
   const activeTemplateId = currentResume?.customization?.template || 'modern';
   const currentTemplate = TEMPLATES_LIST.find(t => t.id === activeTemplateId) || TEMPLATES_LIST[0];
@@ -200,21 +202,34 @@ export const ResumeBuilder: React.FC = () => {
         {/* Center: Mobile Switcher Tabs */}
         <div className="md:hidden flex items-center p-1 bg-slate-100 rounded-xl">
           <button
-            onClick={() => setMobileTab('edit')}
-            className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 ${
-              mobileTab === 'edit' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
+            type="button"
+            onClick={() => setMobileTab('laptop')}
+            title="View exact laptop side-by-side format"
+            className={`px-2.5 py-1 text-[11px] font-bold rounded-lg flex items-center gap-1 transition-all ${
+              mobileTab === 'laptop' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            <FileEdit className="w-3.5 h-3.5" />
+            <Laptop className="w-3 h-3" />
+            <span>Laptop</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileTab('edit')}
+            className={`px-2.5 py-1 text-[11px] font-bold rounded-lg flex items-center gap-1 transition-all ${
+              mobileTab === 'edit' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <FileEdit className="w-3 h-3" />
             <span>Form</span>
           </button>
           <button
+            type="button"
             onClick={() => setMobileTab('preview')}
-            className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 ${
-              mobileTab === 'preview' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
+            className={`px-2.5 py-1 text-[11px] font-bold rounded-lg flex items-center gap-1 transition-all ${
+              mobileTab === 'preview' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Eye className="w-3.5 h-3.5" />
+            <Eye className="w-3 h-3" />
             <span>Preview</span>
           </button>
         </div>
@@ -326,12 +341,16 @@ export const ResumeBuilder: React.FC = () => {
       </header>
 
       {/* Main Two-Column Body */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className={`flex-1 flex relative ${mobileTab === 'laptop' ? 'overflow-x-auto' : 'overflow-hidden'}`}>
         
         {/* Left Column: Form Editor */}
         <div
-          className={`w-full md:w-1/2 lg:w-5/12 bg-white border-r border-slate-200 overflow-y-auto p-4 sm:p-6 ${
-            mobileTab === 'preview' ? 'hidden md:block' : 'block'
+          className={`bg-white border-r border-slate-200 overflow-y-auto p-4 sm:p-6 transition-all ${
+            mobileTab === 'laptop'
+              ? 'w-[420px] shrink-0 border-r-2 shadow-sm'
+              : mobileTab === 'preview'
+              ? 'hidden md:block md:w-1/2 lg:w-5/12'
+              : 'w-full md:w-1/2 lg:w-5/12'
           }`}
         >
           <div className="max-w-2xl mx-auto">
@@ -341,8 +360,12 @@ export const ResumeBuilder: React.FC = () => {
 
         {/* Right Column: Live Sheet Preview */}
         <div
-          className={`w-full md:w-1/2 lg:w-7/12 flex flex-col ${
-            mobileTab === 'edit' ? 'hidden md:flex' : 'flex'
+          className={`flex flex-col ${
+            mobileTab === 'laptop'
+              ? 'w-[794px] sm:w-auto flex-1 shrink-0'
+              : mobileTab === 'edit'
+              ? 'hidden md:flex md:w-1/2 lg:w-7/12'
+              : 'w-full md:w-1/2 lg:w-7/12'
           }`}
         >
           <ResumePreview />
@@ -369,6 +392,26 @@ export const ResumeBuilder: React.FC = () => {
         onClose={() => setIsShareModalOpen(false)}
         resume={currentResume}
       />
+
+      {/* Off-screen Permanent Export Stage for Ultra-Fast Instant PDF Capture */}
+      <div
+        id="app-resume-export-stage"
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: '-9999px',
+          width: '794px',
+          backgroundColor: '#ffffff',
+          pointerEvents: 'none',
+          zIndex: -50,
+          opacity: 1
+        }}
+      >
+        <div id="export-stage-single" style={{ width: '794px', minHeight: '1123px', backgroundColor: '#ffffff', color: '#0f172a' }}>
+          <TemplateRenderer data={currentResume} resume={currentResume} totalPages={1} />
+        </div>
+      </div>
     </div>
   );
 };

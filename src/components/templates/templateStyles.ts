@@ -23,29 +23,29 @@ export const getFontSizeClass = (size: string): { root: string; name: string; ti
   switch (size) {
     case 'compact':
       return {
-        root: 'text-[13px] leading-relaxed',
-        name: 'text-2xl font-bold tracking-tight',
-        title: 'text-xs font-semibold',
-        sectionTitle: 'text-xs font-bold tracking-wider',
+        root: 'text-[12px] leading-snug',
+        name: 'text-2xl font-extrabold tracking-tight',
+        title: 'text-[13px] font-semibold',
+        sectionTitle: 'text-[12px] font-bold tracking-wider uppercase',
         body: 'text-[12px] leading-normal',
         meta: 'text-[11px]'
       };
     case 'large':
       return {
         root: 'text-[15px] leading-relaxed',
-        name: 'text-3xl font-extrabold tracking-tight',
+        name: 'text-[30px] font-extrabold tracking-tight',
         title: 'text-base font-semibold',
-        sectionTitle: 'text-sm font-bold tracking-wider',
+        sectionTitle: 'text-[14px] font-bold tracking-wider uppercase',
         body: 'text-[14px] leading-relaxed',
-        meta: 'text-xs'
+        meta: 'text-[12.5px]'
       };
     case 'normal':
     default:
       return {
         root: 'text-[13.5px] leading-relaxed',
-        name: 'text-[26px] font-bold tracking-tight',
-        title: 'text-sm font-semibold',
-        sectionTitle: 'text-[13px] font-bold tracking-wider',
+        name: 'text-[26px] font-extrabold tracking-tight',
+        title: 'text-[14px] font-semibold',
+        sectionTitle: 'text-[13px] font-bold tracking-wider uppercase',
         body: 'text-[13px] leading-relaxed',
         meta: 'text-[11.5px]'
       };
@@ -55,24 +55,24 @@ export const getFontSizeClass = (size: string): { root: string; name: string; ti
 export const getSpacingClass = (spacing: string): { sectionGap: string; itemGap: string } => {
   switch (spacing) {
     case 'tight':
-      return { sectionGap: 'space-y-3.5', itemGap: 'space-y-2' };
+      return { sectionGap: 'space-y-2.5', itemGap: 'space-y-1.5' };
     case 'relaxed':
-      return { sectionGap: 'space-y-6', itemGap: 'space-y-4' };
+      return { sectionGap: 'space-y-5', itemGap: 'space-y-3' };
     case 'normal':
     default:
-      return { sectionGap: 'space-y-5', itemGap: 'space-y-3' };
+      return { sectionGap: 'space-y-3.5', itemGap: 'space-y-2' };
   }
 };
 
 export const getMarginPadding = (margins: string): string => {
   switch (margins) {
     case 'compact':
-      return 'p-6';
+      return 'p-5';
     case 'wide':
-      return 'p-12';
+      return 'p-8';
     case 'normal':
     default:
-      return 'p-8';
+      return 'p-6';
   }
 };
 

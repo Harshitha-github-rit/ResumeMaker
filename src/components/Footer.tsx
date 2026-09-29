@@ -96,6 +96,15 @@ export const Footer: React.FC = () => {
               <li>
                 <span className="hover:text-white transition-colors cursor-pointer">Contact Support</span>
               </li>
+              <li>
+                <a
+                  href="/resumecraft-source.zip"
+                  download="resumecraft-source.zip"
+                  className="inline-flex items-center gap-1.5 text-blue-400 hover:text-blue-300 transition-colors font-medium"
+                >
+                  Download Source Code (.ZIP)
+                </a>
+              </li>
             </ul>
           </div>
         </div>

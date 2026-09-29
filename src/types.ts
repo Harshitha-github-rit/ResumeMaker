@@ -99,6 +99,8 @@ export interface ResumeData {
   id: string;
   userId?: string;
   isPublic?: boolean;
+  pageNumber?: 1 | 2;
+  totalPages?: 1 | 2;
   title: string;
   updatedAt: string;
   createdAt: string;
@@ -120,7 +122,7 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
-  plan: 'Free' | 'Pro';
+  plan?: 'Free';
 }
 
 export interface AuthState {
